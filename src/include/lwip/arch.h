@@ -188,7 +188,8 @@ typedef uintptr_t mem_ptr_t;
 /* Do we need to define ssize_t? This is a compatibility hack:
  * Unfortunately, this type seems to be unavailable on some systems (even if
  * sys/types or unistd.h are available).
- * Being like that, we define it to 'int' if SSIZE_MAX is not defined.
+ * Being like that, we define it to 'int' or 'long' respectively for 32-bit
+ * and 64-bit platforms if SSIZE_MAX is not defined.
  */
 #ifdef SSIZE_MAX
 /* If SSIZE_MAX is defined, unistd.h should provide the type as well */
@@ -199,8 +200,19 @@ typedef uintptr_t mem_ptr_t;
 #include <unistd.h>
 #endif
 #else /* SSIZE_MAX */
+#ifndef _SSIZE_T_DECLARED
+#if __SIZEOF_POINTER__ == 4
 typedef int ssize_t;
+#else
+typedef long ssize_t;
+#endif
+#endif /* _SSIZE_T_DECLARED */
+
+#if __SIZEOF_POINTER__ == 4
 #define SSIZE_MAX INT_MAX
+#else
+#define SSIZE_MAX LONG_MAX
+#endif
 #endif /* SSIZE_MAX */
 
 /* some maximum values needed in lwip code */
