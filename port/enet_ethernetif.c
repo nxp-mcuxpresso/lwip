@@ -57,7 +57,7 @@ void *ethernetif_get_enet_base(const uint8_t enetIdx)
 
     for (arrayIdx = 0, enetCount = 0; arrayIdx < ARRAY_SIZE(enets); arrayIdx++)
     {
-        if (enets[arrayIdx] != 0U) /* process only defined positions */
+        if (enets[arrayIdx] != NULL) /* process only defined positions */
         {                          /* (some SOC headers count ENETs from 1 instead of 0) */
             if (enetCount == enetIdx)
             {
