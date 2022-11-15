@@ -93,6 +93,9 @@ struct dhcp
   /** see DHCP_FLAG_* */
   u8_t flags;
 
+#if ESP_LWIP_DHCP_FINE_TIMERS_ONDEMAND
+  u8_t fine_timer_enabled;
+#endif
   dhcp_timeout_t request_timeout; /* #ticks with period DHCP_FINE_TIMER_SECS for request timeout */
   dhcp_timeout_t t1_timeout;  /* #ticks with period DHCP_COARSE_TIMER_SECS for renewal time */
   dhcp_timeout_t t2_timeout;  /* #ticks with period DHCP_COARSE_TIMER_SECS for rebind time */
@@ -135,8 +138,10 @@ u8_t dhcp_supplied_address(const struct netif *netif);
 /* to be called every minute */
 void dhcp_coarse_tmr(void);
 /* to be called every half second */
+#if !ESP_LWIP_DHCP_FINE_TIMERS_ONDEMAND
 void dhcp_fine_tmr(void);
-#if ESP_LWIP_DHCP_FINE_TIMERS_ONDEMAND
+#else
+void dhcp_fine_tmr(struct netif *netif);
 void dhcp_fine_timeout_cb(void *arg);
 #endif
 
