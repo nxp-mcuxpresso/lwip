@@ -1061,12 +1061,15 @@ altcp_tls_free_config(struct altcp_tls_config *conf)
 {
   if (conf->pkey) {
     mbedtls_pk_free(conf->pkey);
+    conf->pkey = NULL;
   }
   if (conf->cert) {
     mbedtls_x509_crt_free(conf->cert);
+    conf->cert = NULL;
   }
   if (conf->ca) {
     mbedtls_x509_crt_free(conf->ca);
+    conf->ca = NULL;
   }
   mbedtls_ssl_config_free(&conf->conf);
   altcp_mbedtls_free_config(conf);
