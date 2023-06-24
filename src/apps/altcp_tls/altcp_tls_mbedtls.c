@@ -1071,6 +1071,12 @@ altcp_tls_free_config(struct altcp_tls_config *conf)
   mbedtls_ssl_config_free(&conf->conf);
   altcp_mbedtls_free_config(conf);
   altcp_mbedtls_unref_entropy();
+#if defined(MBEDTLS_SSL_CACHE_C) && ALTCP_MBEDTLS_USE_SESSION_CACHE
+  mbedtls_ssl_cache_free(&conf->cache);
+#endif
+#if defined(MBEDTLS_SSL_SESSION_TICKETS) && ALTCP_MBEDTLS_USE_SESSION_TICKETS
+  mbedtls_ssl_ticket_free(&conf->ticket_ctx);
+#endif
 }
 
 void
