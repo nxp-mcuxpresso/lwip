@@ -1383,6 +1383,11 @@ altcp_mbedtls_dealloc(struct altcp_pcb *conn)
         pbuf_free(state->rx);
         state->rx = NULL;
       }
+      if (state->rx_app) {
+        /* as above */
+        pbuf_free(state->rx_app);
+        state->rx_app = NULL;
+      }
       /* Only free if it's a client connection. Server connections share the same altcp_tls_config*/
       struct altcp_tls_config *conf = (struct altcp_tls_config *) state->conf;
       if (!conf->is_server) {
