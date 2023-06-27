@@ -286,8 +286,13 @@ altcp_mbedtls_lower_recv_process(struct altcp_pcb *conn, altcp_mbedtls_state_t *
 {
   if (!(state->flags & ALTCP_MBEDTLS_FLAGS_HANDSHAKE_DONE)) {
     /* handle connection setup (handshake not done) */
-    int ret = mbedtls_ssl_handshake(&state->ssl_context);
-    /* try to send data... */
+    bool mbedtls_is_ssl_handshake_over = false;
+    int ret;
+    do {
+      ret = mbedtls_ssl_handshake_step(&state->ssl_context);
+      mbedtls_is_ssl_handshake_over = (state->ssl_context.state == MBEDTLS_SSL_HANDSHAKE_OVER);
+    }
+    while (!mbedtls_is_ssl_handshake_over && !ret);
     altcp_output(conn->inner_conn);
     if (state->bio_bytes_read) {
       /* acknowledge all bytes read */
@@ -295,12 +300,14 @@ altcp_mbedtls_lower_recv_process(struct altcp_pcb *conn, altcp_mbedtls_state_t *
       state->bio_bytes_read = 0;
     }
 
-    if (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
+    if (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE || 
+        ret == MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS || ret == MBEDTLS_ERR_SSL_CRYPTO_IN_PROGRESS) { // We might need re-calling of the latter two conditions.
       /* handshake not done, wait for more recv calls */
+      LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("handshake has not done\n"));
       LWIP_ASSERT("in this state, the rx chain should be empty", state->rx == NULL);
       return ERR_OK;
     }
-    if (ret != 0) {
+    else if (!mbedtls_is_ssl_handshake_over) {
       LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_ssl_handshake failed: %d\n", ret));
       /* handshake failed, connection has to be closed */
       if (conn->err) {
@@ -313,20 +320,22 @@ altcp_mbedtls_lower_recv_process(struct altcp_pcb *conn, altcp_mbedtls_state_t *
       }
       return ERR_OK;
     }
-    /* If we come here, handshake succeeded. */
-    LWIP_ASSERT("state", state->bio_bytes_read == 0);
-    LWIP_ASSERT("state", state->bio_bytes_appl == 0);
-    state->flags |= ALTCP_MBEDTLS_FLAGS_HANDSHAKE_DONE;
-    /* issue "connect" callback" to upper connection (this can only happen for active open) */
-    if (conn->connected) {
-      err_t err;
-      err = conn->connected(conn->arg, conn, ERR_OK);
-      if (err != ERR_OK) {
-        return err;
+    else {
+      /* If we come here, handshake succeeded. */
+      LWIP_ASSERT("state", state->bio_bytes_read == 0);
+      LWIP_ASSERT("state", state->bio_bytes_appl == 0);
+      state->flags |= ALTCP_MBEDTLS_FLAGS_HANDSHAKE_DONE;
+      /* issue "connect" callback" to upper connection (this can only happen for active open) */
+      if (conn->connected) {
+        err_t err;
+        err = conn->connected(conn->arg, conn, ERR_OK);
+        if (err != ERR_OK) {
+          return err;
+        }
       }
-    }
-    if (state->rx == NULL) {
-      return ERR_OK;
+      if (state->rx == NULL) {
+        return ERR_OK;
+      }
     }
   }
   /* handle application data */
