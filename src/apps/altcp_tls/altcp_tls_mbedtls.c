@@ -61,6 +61,7 @@
 
 #if LWIP_ALTCP_TLS && LWIP_ALTCP_TLS_MBEDTLS
 
+#include "lwip/tcp.h" /* To check the tcp pcb state */
 #include "lwip/altcp.h"
 #include "lwip/altcp_tls.h"
 #include "lwip/priv/altcp_priv.h"
@@ -611,7 +612,7 @@ altcp_mbedtls_remove_callbacks(struct altcp_pcb *inner_conn)
   altcp_recv(inner_conn, NULL);
   altcp_sent(inner_conn, NULL);
   altcp_err(inner_conn, NULL);
-  altcp_poll(inner_conn, NULL, inner_conn->pollinterval);
+  /* tcp_poll is set externally with tcp_state awareness (must be != LISTEN) */
 }
 
 static void
@@ -1180,15 +1181,31 @@ altcp_mbedtls_close(struct altcp_pcb *conn)
   inner_conn = conn->inner_conn;
   if (inner_conn) {
     err_t err;
+    struct tcp_pcb *pcb = (struct tcp_pcb *) conn->inner_conn->state;
+    enum tcp_state tcpconn_state = pcb->state;
+
     altcp_poll_fn oldpoll = inner_conn->poll;
     altcp_mbedtls_remove_callbacks(conn->inner_conn);
+    /* Remove poll callback for non-listeners */
+    if (tcpconn_state != LISTEN) {
+      /* poll callback is not included in the above */
+      altcp_poll(inner_conn, NULL, inner_conn->pollinterval);
+    }
     err = altcp_close(conn->inner_conn);
     if (err != ERR_OK) {
       /* not closed, set up all callbacks again */
       altcp_mbedtls_setup_callbacks(conn, inner_conn);
-      /* poll callback is not included in the above */
       altcp_poll(inner_conn, oldpoll, inner_conn->pollinterval);
       return err;
+    }
+
+    if (tcpconn_state == LISTEN) {
+        /* Free the configuration held by the listener server that's going to be closed */
+        LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("Freeing the listening pcb %p conn %p\n", pcb, conn));
+        altcp_mbedtls_state_t *state = (altcp_mbedtls_state_t *) conn->state;
+        if (state != NULL && state->conf != NULL && conn->accept != NULL) {
+          altcp_tls_free_config(state->conf);
+      }
     }
     conn->inner_conn = NULL;
   }
