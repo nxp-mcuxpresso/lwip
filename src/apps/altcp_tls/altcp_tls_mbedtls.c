@@ -195,6 +195,7 @@ altcp_mbedtls_lower_connected(void *arg, struct altcp_pcb *inner_conn, err_t err
     state = (altcp_mbedtls_state_t *)conn->state;
     /* ensure overhead value is valid before first write */
     state->overhead_bytes_adjust = 0;
+    state->tx_len = 0;
     return altcp_mbedtls_lower_recv_process(conn, state);
   }
   return ERR_VAL;
@@ -1270,8 +1271,6 @@ altcp_mbedtls_write(struct altcp_pcb *conn, const void *dataptr, u16_t len, u8_t
   int ret;
   altcp_mbedtls_state_t *state;
 
-  LWIP_UNUSED_ARG(apiflags);
-
   if (conn == NULL) {
     return ERR_VAL;
   }
@@ -1295,6 +1294,8 @@ altcp_mbedtls_write(struct altcp_pcb *conn, const void *dataptr, u16_t len, u8_t
       return ERR_MEM;
     }
   }
+  state->tx_len = len;
+  state->apiflags = apiflags;
   ret = mbedtls_ssl_write(&state->ssl_context, (const unsigned char *)dataptr, len);
   /* try to send data... */
   altcp_output(conn->inner_conn);
@@ -1329,7 +1330,6 @@ altcp_mbedtls_bio_send(void *ctx, const unsigned char *dataptr, size_t size)
   altcp_mbedtls_state_t *state;
   int written = 0;
   size_t size_left = size;
-  u8_t apiflags = TCP_WRITE_FLAG_COPY;
 
   LWIP_ASSERT("conn != NULL", conn != NULL);
   if ((conn == NULL) || (conn->inner_conn == NULL)) {
@@ -1338,12 +1338,17 @@ altcp_mbedtls_bio_send(void *ctx, const unsigned char *dataptr, size_t size)
   state = (altcp_mbedtls_state_t *)conn->state;
   LWIP_ASSERT("state != NULL", state != NULL);
 
+  u8_t apiflags = TCP_WRITE_FLAG_COPY | state->apiflags;
   while (size_left) {
     u16_t write_len = (u16_t)LWIP_MIN(size_left, 0xFFFF);
+    if (state->tx_len - write_len > 0) {
+      apiflags |= TCP_WRITE_FLAG_MORE;
+    }
     err_t err = altcp_write(conn->inner_conn, (const void *)dataptr, write_len, apiflags);
     if (err == ERR_OK) {
       written += write_len;
       size_left -= write_len;
+      state->tx_len -= write_len;
       state->overhead_bytes_adjust += write_len;
     } else if (err == ERR_MEM) {
       if (written) {
