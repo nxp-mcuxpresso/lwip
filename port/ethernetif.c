@@ -269,7 +269,7 @@ void ethernetif_input(struct netif *netif_)
 #if ETH_DO_RX_IN_SEPARATE_TASK
     (void)netif_;
 
-#ifdef __CA7_REV
+#if defined(__CA7_REV) || defined(__ARM_ARCH_8A)
     if (SystemGetIRQNestingLevel())
 #else /* __CA7_REV */
     if (__get_IPSR())
@@ -766,7 +766,7 @@ void ethernetif_pbuf_free_safe(struct pbuf *p)
 #else
     /* Memory free from other context is not allowed. */
 
-#ifdef __CA7_REV
+#if defined(__CA7_REV) || defined(__ARM_ARCH_8A)
     if (SystemGetIRQNestingLevel())
 #else
     if (__get_IPSR())

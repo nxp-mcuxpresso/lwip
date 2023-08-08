@@ -226,7 +226,7 @@ static void ethernet_callback(ENET_Type *base,
         {
             portBASE_TYPE taskToWake = pdFALSE;
 
-#ifdef __CA7_REV
+#if defined(__CA7_REV) || defined(__ARM_ARCH_8A)
             if (SystemGetIRQNestingLevel())
 #else
             if (__get_IPSR())
@@ -470,7 +470,7 @@ void ethernetif_plat_init(struct netif *netif,
     {
         if (enetBases[instance] == ethernetif->base)
         {
-#ifdef __CA7_REV
+#ifdef __GIC_PRIO_BITS
             GIC_SetPriority(enetRxIrqId[instance], ENET_PRIORITY);
             GIC_SetPriority(enetTxIrqId[instance], ENET_PRIORITY);
 #if defined(ENET_ENHANCEDBUFFERDESCRIPTOR_MODE) && ENET_ENHANCEDBUFFERDESCRIPTOR_MODE
@@ -482,7 +482,7 @@ void ethernetif_plat_init(struct netif *netif,
 #if defined(ENET_ENHANCEDBUFFERDESCRIPTOR_MODE) && ENET_ENHANCEDBUFFERDESCRIPTOR_MODE
             NVIC_SetPriority(enetTsIrqId[instance], ENET_1588_PRIORITY);
 #endif /* ENET_ENHANCEDBUFFERDESCRIPTOR_MODE */
-#endif /* __CA7_REV */
+#endif /* __GIC_PRIO_BITS */
             break;
         }
     }
