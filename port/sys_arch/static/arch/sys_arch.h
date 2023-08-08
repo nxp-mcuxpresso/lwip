@@ -126,6 +126,14 @@ extern "C" {
 
 void sys_assert(const char *pcMessage);
 
+#if defined(__ARM_ARCH_8A) && defined(SDK_OS_FREE_RTOS)
+extern uint64_t ullPortInterruptNesting;
+static inline bool SystemGetIRQNestingLevel(void)
+{
+	return !!(ullPortInterruptNesting);
+}
+#endif
+
 #if defined(__cplusplus)
 }
 #endif /* __cplusplus */
