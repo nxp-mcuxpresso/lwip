@@ -182,7 +182,7 @@ void sys_mbox_post(sys_mbox_t *pxMailBox, void *pxMessageToPost)
 err_t sys_mbox_trypost(sys_mbox_t *pxMailBox, void *pxMessageToPost)
 {
     portBASE_TYPE taskToWake = pdFALSE;
-#ifdef __CA7_REV
+#if defined(__CA7_REV) || defined(__ARM_ARCH_8A)
     if (SystemGetIRQNestingLevel())
 #else
     if (__get_IPSR())
@@ -602,7 +602,7 @@ sys_prot_t sys_arch_protect(void)
 {
     sys_prot_t result = 0;
 
-#ifdef __CA7_REV
+#if defined(__CA7_REV) || defined(__ARM_ARCH_8A)
     if (SystemGetIRQNestingLevel())
 #else
     if (__get_IPSR())
@@ -630,7 +630,7 @@ sys_prot_t sys_arch_protect(void)
  *---------------------------------------------------------------------------*/
 void sys_arch_unprotect(sys_prot_t xValue)
 {
-#ifdef __CA7_REV
+#if defined(__CA7_REV) || defined(__ARM_ARCH_8A)
     if (SystemGetIRQNestingLevel())
 #else
     if (__get_IPSR())
@@ -681,7 +681,7 @@ void sys_mark_tcpip_thread(void)
 void sys_check_core_locking(void)
 {
     LWIP_ASSERT("Function called from interrupt context",
-#ifdef __CA7_REV
+#if defined(__CA7_REV) || defined(__ARM_ARCH_8A)
                 (SystemGetIRQNestingLevel() == 0)
 #else
                 (__get_IPSR() == 0)
@@ -787,7 +787,7 @@ void sys_arch_unprotect(sys_prot_t xValue)
 void sys_check_core_locking(void)
 {
     LWIP_ASSERT("Function called from interrupt context",
-#ifdef __CA7_REV
+#if defined(__CA7_REV) || defined(__ARM_ARCH_8A)
                 (SystemGetIRQNestingLevel() == 0)
 #else
                 (__get_IPSR() == 0)
