@@ -75,7 +75,14 @@
 
 /* ENET IRQ priority. Used in FreeRTOS. */
 /* Interrupt priorities. */ // FIXME rename or move?
-#ifdef __CA7_REV
+#if defined(__ARM_ARCH_8A)
+#ifndef ENET_PRIORITY
+#define ENET_PRIORITY ((portLOWEST_USABLE_INTERRUPT_PRIORITY) << portPRIORITY_SHIFT)
+#endif
+#ifndef ENET_1588_PRIORITY
+#define ENET_1588_PRIORITY ((portLOWEST_USABLE_INTERRUPT_PRIORITY - 1) << portPRIORITY_SHIFT)
+#endif
+#elif defined(__CA7_REV)
 #ifndef ENET_PRIORITY
 #define ENET_PRIORITY (21U)
 #endif
