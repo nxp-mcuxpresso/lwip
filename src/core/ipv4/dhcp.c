@@ -1514,7 +1514,7 @@ dhcp_option(u16_t options_out_len, u8_t *options, u8_t option_type, u8_t option_
 static u16_t
 dhcp_option_byte(u16_t options_out_len, u8_t *options, u8_t value)
 {
-  LWIP_ASSERT("dhcp_option_byte: options_out_len < DHCP_OPTIONS_LEN", options_out_len < DHCP_OPTIONS_LEN);
+  LWIP_ASSERT("dhcp_option_byte: options_out_len + 1 <= DHCP_OPTIONS_LEN", options_out_len + 1U <= DHCP_OPTIONS_LEN);
   options[options_out_len++] = value;
   return options_out_len;
 }
