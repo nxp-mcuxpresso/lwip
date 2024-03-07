@@ -4,7 +4,7 @@
  *
  * This file provides a TLS layer using mbedTLS
  * 
- * This version is currently compatible with the 2.x.x branch (current LTS).
+ * This version is currently compatible with both 2.x.x and 3.x.x branches.
  */
 
 /*
@@ -72,7 +72,7 @@
 /* @todo: which includes are really needed? */
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
-#include "mbedtls/certs.h"
+// #include "mbedtls/certs.h"
 #include "mbedtls/x509.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/net_sockets.h"
@@ -82,11 +82,22 @@
 #include "mbedtls/memory_buffer_alloc.h"
 #include "mbedtls/ssl_cache.h"
 #include "mbedtls/ssl_ticket.h"
-
-#include "mbedtls/ssl_internal.h" /* to call mbedtls_flush_output after ERR_MEM */
+#if MBEDTLS_VERSION_MAJOR < 3
+#include "mbedtls/ssl_internal.h" /* to call mbedtls_ssl_flush_output after ERR_MEM */
+#else
+#include "psa/crypto.h"
+#include "mbedtls/platform_util.h"
+MBEDTLS_CHECK_RETURN_CRITICAL
+int mbedtls_ssl_flush_output(mbedtls_ssl_context *ssl);
+#endif
+#include "mbedtls/version.h"
 
 #include <string.h>
 #include <stdbool.h>
+
+#if MBEDTLS_VERSION_MAJOR < 3
+#define MBEDTLS_PRIVATE(x) x
+#endif
 
 #ifndef ALTCP_MBEDTLS_ENTROPY_PTR
 #define ALTCP_MBEDTLS_ENTROPY_PTR   NULL
@@ -287,13 +298,17 @@ altcp_mbedtls_lower_recv_process(struct altcp_pcb *conn, altcp_mbedtls_state_t *
 {
   if (!(state->flags & ALTCP_MBEDTLS_FLAGS_HANDSHAKE_DONE)) {
     /* handle connection setup (handshake not done) */
-    bool mbedtls_is_ssl_handshake_over = false;
+    bool handshake_is_over = false;
     int ret;
     do {
       ret = mbedtls_ssl_handshake_step(&state->ssl_context);
-      mbedtls_is_ssl_handshake_over = (state->ssl_context.state == MBEDTLS_SSL_HANDSHAKE_OVER);
+#if MBEDTLS_VERSION_MAJOR >= 3
+      handshake_is_over = mbedtls_ssl_is_handshake_over(&state->ssl_context);
+#else
+      handshake_is_over = (state->ssl_context.state == MBEDTLS_SSL_HANDSHAKE_OVER);
+#endif
     }
-    while (!mbedtls_is_ssl_handshake_over && !ret);
+    while (handshake_is_over == 0 && !ret);
     altcp_output(conn->inner_conn);
     if (state->bio_bytes_read) {
       /* acknowledge all bytes read */
@@ -308,7 +323,7 @@ altcp_mbedtls_lower_recv_process(struct altcp_pcb *conn, altcp_mbedtls_state_t *
       LWIP_ASSERT("in this state, the rx chain should be empty", state->rx == NULL);
       return ERR_OK;
     }
-    else if (!mbedtls_is_ssl_handshake_over) {
+    else if (!handshake_is_over) {
       LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_ssl_handshake failed: %d (%x)\n", ret, ret));
       /* handshake failed, connection has to be closed */
       if (conn->err) {
@@ -553,7 +568,7 @@ altcp_mbedtls_lower_sent(void *arg, struct altcp_pcb *inner_conn, u16_t len)
     LWIP_ASSERT("state", state != NULL);
     LWIP_ASSERT("pcb mismatch", conn->inner_conn == inner_conn);
     /* calculate TLS overhead part to not send it to application */
-    overhead = state->overhead_bytes_adjust + state->ssl_context.out_left;
+    overhead = state->overhead_bytes_adjust + state->ssl_context.MBEDTLS_PRIVATE(out_left);
     if ((unsigned)overhead > len) {
       overhead = len;
     }
@@ -713,7 +728,7 @@ altcp_tls_set_session(struct altcp_pcb *conn, struct altcp_tls_session *session)
     altcp_mbedtls_state_t *state = (altcp_mbedtls_state_t *)conn->state;
     int ret = -1;
 #if defined(MBEDTLS_HAVE_TIME)
-    if (session->data.start)
+    if (session->data.MBEDTLS_PRIVATE(start))
 #endif
       ret = mbedtls_ssl_set_session(&state->ssl_context, &session->data);
     return ret < 0 ? ERR_VAL : ERR_OK;
@@ -780,6 +795,13 @@ altcp_mbedtls_ref_entropy(void)
     } else {
       return ERR_MEM;
     }
+#if defined(MBEDTLS_SSL_PROTO_TLS1_3)
+    int status = psa_crypto_init();
+    if (status != PSA_SUCCESS) {
+        LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("Failed to initialize PSA Crypto\n"));
+        return ERR_VAL;
+    }
+#endif
   } else {
     altcp_tls_entropy_rng->ref++;
   }
@@ -807,7 +829,7 @@ altcp_tls_create_config(int is_server, u8_t cert_count, u8_t pkey_count, int hav
   struct altcp_tls_config *conf;
   mbedtls_x509_crt *mem;
 
-  if (TCP_WND < MBEDTLS_SSL_MAX_CONTENT_LEN) {
+  if (TCP_WND < MBEDTLS_SSL_IN_CONTENT_LEN) {
     LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG|LWIP_DBG_LEVEL_SERIOUS,
       ("altcp_tls: TCP_WND is smaller than the RX decrypion buffer, connection RX might stall!\n"));
   }
@@ -932,7 +954,11 @@ err_t altcp_tls_config_server_add_privkey_cert(struct altcp_tls_config *config,
     return ERR_VAL;
   }
 
-  ret = mbedtls_pk_parse_key(pkey, (const unsigned char *) privkey, privkey_len, privkey_pass, privkey_pass_len);
+  ret = mbedtls_pk_parse_key(pkey, (const unsigned char *) privkey, privkey_len, privkey_pass, privkey_pass_len
+#if MBEDTLS_VERSION_MAJOR >= 3
+                            , mbedtls_ctr_drbg_random, &altcp_tls_entropy_rng->ctr_drbg
+#endif
+  );
   if (ret != 0) {
     LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_pk_parse_public_key failed: %d\n", ret));
     mbedtls_x509_crt_free(srvcert);
@@ -1035,7 +1061,11 @@ altcp_tls_create_config_client_2wayauth(const u8_t *ca, size_t ca_len, const u8_
   }
 
   mbedtls_pk_init(conf->pkey);
-  ret = mbedtls_pk_parse_key(conf->pkey, privkey, privkey_len, privkey_pass, privkey_pass_len);
+  ret = mbedtls_pk_parse_key(conf->pkey, privkey, privkey_len, privkey_pass, privkey_pass_len
+#if MBEDTLS_VERSION_MAJOR >= 3
+                            , mbedtls_ctr_drbg_random, &altcp_tls_entropy_rng->ctr_drbg
+#endif
+);
   if (ret != 0) {
     LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_pk_parse_key failed: %d 0x%x\n", ret, -1*ret));
     altcp_tls_free_config(conf);
@@ -1247,7 +1277,11 @@ altcp_mbedtls_sndbuf(struct altcp_pcb *conn)
           size_t ret;
 #if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)
           /* @todo: adjust ssl_added to real value related to negotiated cipher */
+#if MBEDTLS_VERSION_MAJOR >= 3
+          size_t max_frag_len = mbedtls_ssl_get_max_out_record_payload(&state->ssl_context);
+#else
           size_t max_frag_len = mbedtls_ssl_get_max_frag_len(&state->ssl_context);
+#endif
           max_len = LWIP_MIN(max_frag_len, max_len);
 #endif
           /* Adjust sndbuf of inner_conn with what added by SSL */
@@ -1288,9 +1322,9 @@ altcp_mbedtls_write(struct altcp_pcb *conn, const void *dataptr, u16_t len, u8_t
   /* HACK: if there is something left to send, try to flush it and only
      allow sending more if this succeeded (this is a hack because neither
      returning 0 nor MBEDTLS_ERR_SSL_WANT_WRITE worked for me) */
-  if (state->ssl_context.out_left) {
+  if (state->ssl_context.MBEDTLS_PRIVATE(out_left)) {
     altcp_mbedtls_flush_output(state);
-    if (state->ssl_context.out_left) {
+    if (state->ssl_context.MBEDTLS_PRIVATE(out_left)) {
       return ERR_MEM;
     }
   }
