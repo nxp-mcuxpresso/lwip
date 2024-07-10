@@ -1288,6 +1288,8 @@ altcp_mbedtls_sndbuf(struct altcp_pcb *conn)
           ret = LWIP_MIN(sndbuf - ssl_added, max_len);
           LWIP_ASSERT("sndbuf overflow", ret <= 0xFFFF);
           return (u16_t)ret;
+        } else { 
+          return 0;
         }
       }
     }
