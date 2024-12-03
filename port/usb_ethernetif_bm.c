@@ -1616,7 +1616,8 @@ err_t USB_EthernetIfOutPut(struct netif *netif, struct pbuf *p)
         {
             if (p->tot_len < RNDIS_FRAME_MAX_FRAMELEN)
             {
-                u16_t uCopied = pbuf_copy_partial(p, rndisInstance->outPutBuffer, p->tot_len, 0);
+                uint8_t *buf = &((rndis_packet_msg_struct_t *)rndisInstance->outPutBuffer)->dataBuffer[0];
+                u16_t uCopied = pbuf_copy_partial(p, buf, p->tot_len, 0);
                 LWIP_ASSERT("uCopied != p->tot_len", uCopied == p->tot_len);
 
                 rndisInstance->pollingInSending = 1;
@@ -1626,7 +1627,7 @@ err_t USB_EthernetIfOutPut(struct netif *netif, struct pbuf *p)
                 }
                 rndisInstance->pollingInSending = 0;
                 USB_HostRndisSendDataMsg(rndisInstance->classHandle, rndisInstance->outPutBuffer,
-                                         RNDIS_FRAME_MAX_FRAMELEN, 0, 0, 0, 0, 0, ((uint8_t *)&g_OutPutBuffer[0]),
+                                         RNDIS_FRAME_MAX_FRAMELEN, 0, 0, 0, 0, 0, buf,
                                          p->tot_len, USB_HostCdcRndisDataOutCallback, rndisInstance);
             }
             else
