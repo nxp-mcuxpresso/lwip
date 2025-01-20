@@ -4,9 +4,7 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip)
     mcux_add_include(
         PROJECT_BASE_PATH lwip
         INCLUDES port
-                 src
                  src/include
-                 src/include/lwip
     )
 
     mcux_add_source(
@@ -323,11 +321,6 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.contrib.ping)
 endif()
 
 if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.lwiperf)
-    mcux_add_include(
-        PROJECT_BASE_PATH lwip
-        INCLUDES src/include/lwip/apps
-    )
-
     mcux_add_source(
         SOURCES
             src/apps/lwiperf/lwiperf.c
@@ -386,9 +379,6 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.httpssrv)
 endif()
 
 if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.mdns)
-    mcux_add_include(
-        INCLUDES src/include/lwip/apps
-    )
     mcux_add_source(
         SOURCES
             src/apps/mdns/mdns_domain.c
@@ -403,10 +393,6 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.mdns)
 endif ()
 
 if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.mqtt)
-    mcux_add_include(
-        INCLUDES src/include/lwip/apps
-    )
-
     mcux_add_source(
         SOURCES
             src/apps/mqtt/mqtt.c
@@ -417,10 +403,6 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.mqtt)
 endif ()
 
 if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.sntp)
-    mcux_add_include(
-        INCLUDES src/include/lwip/apps
-    )
-
     mcux_add_source(
         SOURCES
             src/include/lwip/apps/sntp.h
@@ -481,7 +463,6 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.httpd.support)
     mcux_add_include(
         INCLUDES
             src/apps/http
-            src/include/lwip/apps
     )
 
     mcux_add_source(
