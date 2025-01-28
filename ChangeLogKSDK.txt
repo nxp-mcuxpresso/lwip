@@ -8,6 +8,14 @@
   The development versions (X.Y.Z.dev) do not refer to a single source code snapshots. To avoid ambiguity,
   change log below contains SHA-1 hashes of GIT commits used when importing the code into the SDK.
 
+  - 2.2.1_rev3
+    - Bug fixes:
+      - src/apps/mdns: mdns_resp_remove_netif stops all timeouts related to the netif now.
+        This prevent the timeout handlers to send answers on netifs which already have mDNS
+        responder disabled and prevents access to deallocated structures. It also prevents
+        excessive number of timeouts being scheduled when mDNS responder is disabled and
+        reenabled on netif quickly.
+
   - 2.2.1_rev2
     - Bug fixes:
       - src/apps/lwiperf: Fixed calculation of the number of UDP datagrams to transmit.

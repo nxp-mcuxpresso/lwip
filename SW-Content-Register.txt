@@ -1,5 +1,5 @@
 Release Name: lwIP TCP/IP Stack
-Release Version: 2.2.1_rev2
+Release Version: 2.2.1_rev3
 Package License: BSD-3-Clause
 
 lwip       Name: lwIP TCP/IP Stack                           
