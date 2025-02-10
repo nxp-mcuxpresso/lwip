@@ -9,6 +9,8 @@
   change log below contains SHA-1 hashes of GIT commits used when importing the code into the SDK.
 
   - 2.2.1_rev3
+    - New features:
+      - Ability to generate lwipopts.h from Kconfig.
     - Bug fixes:
       - src/apps/mdns: mdns_resp_remove_netif stops all timeouts related to the netif now.
         This prevent the timeout handlers to send answers on netifs which already have mDNS
