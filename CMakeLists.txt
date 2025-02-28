@@ -346,12 +346,12 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.lwiperf)
     mcux_add_macro(
         "-DPRINTF_FLOAT_ENABLE=1"
     )
+endif()
 
-    if (NOT CONFIG_MCUX_PRJSEG_middleware.lwip.generated_config)
-        mcux_add_macro(
-            "-DSO_REUSE=1"
-        )
-    endif()
+if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.lwiperf.non_generated_lwipopts)
+    mcux_add_macro(
+        "-DSO_REUSE=1"
+    )
 endif()
 
 if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.httpsrv)
@@ -530,21 +530,22 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.enet_ethernetif)
         COMPONENTS
             driver.enet_qos
     )
-    if (NOT CONFIG_MCUX_PRJSEG_middleware.lwip.generated_config)
-        mcux_add_macro(
-            "-DLWIP_DISABLE_PBUF_POOL_SIZE_SANITY_CHECKS=1\
-             -DLWIP_SUPPORT_CUSTOM_PBUF=1\
-             -DCHECKSUM_GEN_UDP=1\
-             -DCHECKSUM_GEN_TCP=1\
-             -DCHECKSUM_GEN_ICMP=1\
-             -DCHECKSUM_GEN_ICMP6=1\
-             -DCHECKSUM_CHECK_IP=1\
-             -DCHECKSUM_CHECK_UDP=1\
-             -DCHECKSUM_CHECK_TCP=1\
-             -DCHECKSUM_CHECK_ICMP=1\
-             -DCHECKSUM_CHECK_ICMP6=1"
-        )
-    endif ()
+endif ()
+
+if (CONFIG_MCUX_COMPONENT_middleware.lwip.enet_ethernetif.non_generated_lwipopts)
+    mcux_add_macro(
+        "-DLWIP_DISABLE_PBUF_POOL_SIZE_SANITY_CHECKS=1\
+         -DLWIP_SUPPORT_CUSTOM_PBUF=1\
+         -DCHECKSUM_GEN_UDP=1\
+         -DCHECKSUM_GEN_TCP=1\
+         -DCHECKSUM_GEN_ICMP=1\
+         -DCHECKSUM_GEN_ICMP6=1\
+         -DCHECKSUM_CHECK_IP=1\
+         -DCHECKSUM_CHECK_UDP=1\
+         -DCHECKSUM_CHECK_TCP=1\
+         -DCHECKSUM_CHECK_ICMP=1\
+         -DCHECKSUM_CHECK_ICMP6=1"
+    )
 endif ()
 
 if (CONFIG_MCUX_COMPONENT_middleware.lwip.kinetis_ethernetif)
@@ -562,20 +563,21 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.kinetis_ethernetif)
             port/kinetis_configchecks.h
             port/enet_ethernetif_kinetis.c
     )
-    if (NOT CONFIG_MCUX_PRJSEG_middleware.lwip.generated_config)
-        mcux_add_macro(
-            "-DLWIP_DISABLE_PBUF_POOL_SIZE_SANITY_CHECKS=1\
-             -DLWIP_SUPPORT_CUSTOM_PBUF=1\
-             -DCHECKSUM_GEN_UDP=1\
-             -DCHECKSUM_GEN_TCP=1\
-             -DCHECKSUM_GEN_ICMP=1\
-             -DCHECKSUM_GEN_ICMP6=1\
-             -DCHECKSUM_CHECK_UDP=1\
-             -DCHECKSUM_CHECK_TCP=1\
-             -DCHECKSUM_CHECK_ICMP=1\
-             -DCHECKSUM_CHECK_ICMP6=1"
-        )
-    endif ()
+endif ()
+
+if (CONFIG_MCUX_COMPONENT_middleware.lwip.kinetis_ethernetif.non_generated_lwipopts)
+    mcux_add_macro(
+        "-DLWIP_DISABLE_PBUF_POOL_SIZE_SANITY_CHECKS=1\
+         -DLWIP_SUPPORT_CUSTOM_PBUF=1\
+         -DCHECKSUM_GEN_UDP=1\
+         -DCHECKSUM_GEN_TCP=1\
+         -DCHECKSUM_GEN_ICMP=1\
+         -DCHECKSUM_GEN_ICMP6=1\
+         -DCHECKSUM_CHECK_UDP=1\
+         -DCHECKSUM_CHECK_TCP=1\
+         -DCHECKSUM_CHECK_ICMP=1\
+         -DCHECKSUM_CHECK_ICMP6=1"
+    )
 endif ()
 
 if (CONFIG_MCUX_COMPONENT_middleware.lwip.netc_ethernetif)
@@ -592,21 +594,22 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.netc_ethernetif)
             port/netc_configchecks.h
             port/netc_ethernetif.c
     )
-    if (NOT CONFIG_MCUX_PRJSEG_middleware.lwip.generated_config)
-        mcux_add_macro(
-            "-DLWIP_DISABLE_PBUF_POOL_SIZE_SANITY_CHECKS=1\
-             -DLWIP_SUPPORT_CUSTOM_PBUF=1\
-             -DCHECKSUM_GEN_IP=1\
-             -DCHECKSUM_GEN_UDP=1\
-             -DCHECKSUM_GEN_TCP=1\
-             -DCHECKSUM_GEN_ICMP=1\
-             -DCHECKSUM_GEN_ICMP6=1\
-             -DCHECKSUM_CHECK_UDP=1\
-             -DCHECKSUM_CHECK_TCP=1\
-             -DCHECKSUM_CHECK_ICMP=1\
-             -DCHECKSUM_CHECK_ICMP6=1"
-        )
-    endif ()
+endif ()
+
+if (CONFIG_MCUX_COMPONENT_middleware.lwip.netc_ethernetif.non_generated_lwipopts)
+    mcux_add_macro(
+        "-DLWIP_DISABLE_PBUF_POOL_SIZE_SANITY_CHECKS=1\
+         -DLWIP_SUPPORT_CUSTOM_PBUF=1\
+         -DCHECKSUM_GEN_IP=1\
+         -DCHECKSUM_GEN_UDP=1\
+         -DCHECKSUM_GEN_TCP=1\
+         -DCHECKSUM_GEN_ICMP=1\
+         -DCHECKSUM_GEN_ICMP6=1\
+         -DCHECKSUM_CHECK_UDP=1\
+         -DCHECKSUM_CHECK_TCP=1\
+         -DCHECKSUM_CHECK_ICMP=1\
+         -DCHECKSUM_CHECK_ICMP6=1"
+    )
 endif ()
 
 if (CONFIG_MCUX_COMPONENT_middleware.lwip.eoe_ethernetif)
@@ -618,15 +621,16 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.eoe_ethernetif)
             port/eoe_ethernetif.c
             port/eoe_ethernetif.h
     )
-    if (NOT CONFIG_MCUX_PRJSEG_middleware.lwip.generated_config)
-        mcux_add_macro(
-            "-DCHECKSUM_GEN_IP=1\
-             -DCHECKSUM_GEN_UDP=1\
-             -DCHECKSUM_GEN_TCP=1\
-             -DCHECKSUM_GEN_ICMP=1\
-             -DCHECKSUM_CHECK_ICMP=1"
-        )
-    endif ()
+endif ()
+
+if (CONFIG_MCUX_COMPONENT_middleware.lwip.eoe_ethernetif.non_generated_lwipopts)
+    mcux_add_macro(
+        "-DCHECKSUM_GEN_IP=1\
+         -DCHECKSUM_GEN_UDP=1\
+         -DCHECKSUM_GEN_TCP=1\
+         -DCHECKSUM_GEN_ICMP=1\
+         -DCHECKSUM_CHECK_ICMP=1"
+    )
 endif ()
 
 if (CONFIG_MCUX_COMPONENT_middleware.lwip.empty_ethernetif)
@@ -653,21 +657,22 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.mcx_ethernetif)
             port/enet_configchecks.h
             port/enet_ethernetif_lpc.c
     )
-    if (NOT CONFIG_MCUX_PRJSEG_middleware.lwip.generated_config)
-        mcux_add_macro(
-            "-DLWIP_DISABLE_PBUF_POOL_SIZE_SANITY_CHECKS=1\
-             -DLWIP_SUPPORT_CUSTOM_PBUF=1\
-             -DCHECKSUM_GEN_UDP=1\
-             -DCHECKSUM_GEN_TCP=1\
-             -DCHECKSUM_GEN_ICMP=1\
-             -DCHECKSUM_GEN_ICMP6=1\
-             -DCHECKSUM_CHECK_IP=1\
-             -DCHECKSUM_CHECK_UDP=1\
-             -DCHECKSUM_CHECK_TCP=1\
-             -DCHECKSUM_CHECK_ICMP=1\
-             -DCHECKSUM_CHECK_ICMP6=1"
-        )
-    endif ()
+endif ()
+
+if (CONFIG_MCUX_COMPONENT_middleware.lwip.mcx_ethernetif.non_generated_lwipopts)
+    mcux_add_macro(
+        "-DLWIP_DISABLE_PBUF_POOL_SIZE_SANITY_CHECKS=1\
+         -DLWIP_SUPPORT_CUSTOM_PBUF=1\
+         -DCHECKSUM_GEN_UDP=1\
+         -DCHECKSUM_GEN_TCP=1\
+         -DCHECKSUM_GEN_ICMP=1\
+         -DCHECKSUM_GEN_ICMP6=1\
+         -DCHECKSUM_CHECK_IP=1\
+         -DCHECKSUM_CHECK_UDP=1\
+         -DCHECKSUM_CHECK_TCP=1\
+         -DCHECKSUM_CHECK_ICMP=1\
+         -DCHECKSUM_CHECK_ICMP6=1"
+    )
 endif ()
 
 if (CONFIG_MCUX_COMPONENT_middleware.lwip.usb_ethernetif)

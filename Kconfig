@@ -48,6 +48,14 @@ if MCUX_COMPONENT_middleware.lwip
         bool "iPerf"
         imply SO_REUSE
 
+    config MCUX_COMPONENT_middleware.lwip.apps.lwiperf.non_generated_lwipopts
+        bool
+        default y
+        depends on MCUX_COMPONENT_middleware.lwip.apps.lwiperf
+        depends on !MCUX_PRJSEG_middleware.lwip.generated_config
+        help
+            Hidden component used in CMake to add few macros when not generating lwipopts.h.
+
     config MCUX_COMPONENT_middleware.lwip.apps.httpsrv
         bool "HTTP Server"
         depends on MCUX_COMPONENT_middleware.freertos-kernel
@@ -102,6 +110,14 @@ if MCUX_COMPONENT_middleware.lwip
             help
                 "Kinetis enet ethernet interface"
 
+        config MCUX_COMPONENT_middleware.lwip.kinetis_ethernetif.non_generated_lwipopts
+            bool
+            default y
+            depends on MCUX_COMPONENT_middleware.lwip.kinetis_ethernetif
+            depends on !MCUX_PRJSEG_middleware.lwip.generated_config
+            help
+                Hidden component used in CMake to add few macros when not generating lwipopts.h.
+
         config MCUX_COMPONENT_middleware.lwip.enet_ethernetif
             bool "Enet ethernet interface"
             imply LWIP_DISABLE_PBUF_POOL_SIZE_SANITY_CHECKS
@@ -116,6 +132,14 @@ if MCUX_COMPONENT_middleware.lwip
                        MCUX_COMPONENT_component.gpio_adapter
             help
                 "Enet ethernet interface"
+
+        config MCUX_COMPONENT_middleware.lwip.enet_ethernetif.non_generated_lwipopts
+            bool
+            default y
+            depends on MCUX_COMPONENT_middleware.lwip.enet_ethernetif
+            depends on !MCUX_PRJSEG_middleware.lwip.generated_config
+            help
+                Hidden component used in CMake to add few macros when not generating lwipopts.h.
 
         config MCUX_COMPONENT_middleware.lwip.netc_ethernetif
             bool "NETC ethernet interface"
@@ -132,6 +156,14 @@ if MCUX_COMPONENT_middleware.lwip
             help
                 NETC ethernet interface
 
+        config MCUX_COMPONENT_middleware.lwip.netc_ethernetif.non_generated_lwipopts
+            bool
+            default y
+            depends on MCUX_COMPONENT_middleware.lwip.netc_ethernetif
+            depends on !MCUX_PRJSEG_middleware.lwip.generated_config
+            help
+                Hidden component used in CMake to add few macros when not generating lwipopts.h.
+
         config MCUX_COMPONENT_middleware.lwip.mcx_ethernetif
             bool "MCX ethernet interface"
             depends on MCUX_COMPONENT_component.eth_phy_common
@@ -147,11 +179,27 @@ if MCUX_COMPONENT_middleware.lwip
             help
                 "MCX ethernet interface"
 
+        config MCUX_COMPONENT_middleware.lwip.mcx_ethernetif.non_generated_lwipopts
+            bool
+            default y
+            depends on MCUX_COMPONENT_middleware.lwip.mcx_ethernetif
+            depends on !MCUX_PRJSEG_middleware.lwip.generated_config
+            help
+                Hidden component used in CMake to add few macros when not generating lwipopts.h.
+
         config MCUX_COMPONENT_middleware.lwip.eoe_ethernetif
             bool "EtherCAT EOE ethernet interface"
             depends on MCUX_COMPONENT_middleware.freertos-kernel
             help
                 EtherCAT EOE ethernet interface
+
+        config MCUX_COMPONENT_middleware.lwip.eoe_ethernetif.non_generated_lwipopts
+            bool
+            default y
+            depends on MCUX_COMPONENT_middleware.lwip.eoe_ethernetif
+            depends on !MCUX_PRJSEG_middleware.lwip.generated_config
+            help
+                Hidden component used in CMake to add few macros when not generating lwipopts.h.
 
         config MCUX_COMPONENT_middleware.lwip.empty_ethernetif
             bool "Empty ethernet interface"
