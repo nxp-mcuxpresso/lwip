@@ -10,7 +10,109 @@
 
   - 2.2.1_rev3
     - New features:
-      - Ability to generate lwipopts.h from Kconfig.
+      - Added optional ability to generate lwIP options header file from Kconfig. The feature
+        has been introduced to align with the changes in MCUXpresso SDK. It can be enabled
+        when using Kconfig and lwIP is used directly from repository, for example when using
+        "west build" command to generate or build projects. It cannot be used when working
+        with SDK packages, but since lwIP examples (in lwip_examples folder) have been switched
+        to this approach in repository, you can find pregenerated lwipopts_gen.h files in SDK
+        packages (note that if you want to add/change some of the pregenerated settings, do it
+        in lwipopts_gen.h, not lwipopts.h).
+
+        The optional feature is disabled by default and can be enabled by setting
+        CONFIG_MCUX_PRJSEG_middleware.lwip.generated_config=y in prj.conf. When enabled,
+        lwIP options are configured using the Kconfig system, usually written in prj.conf
+        file(s) or .config file with CONFIG_ prefix. Kconfig system uses this information
+        to generate lwipopts_gen.h during build phase. It is included from lwipopts.h
+        (from template/kconfig). The lwipopts.h file is not intended to be edited, it does
+        preprocessing of the values from lwipopts_gen.h.
+
+        The list of options, its types, default values and description is in the file
+        named Kconfig, under the menu "Options (lwipopts_gen.h)".
+
+        Note that there are some differences from using manually edited lwipopts.h:
+
+        - Use CONFIG_ prefix in Kconfig, so for example CONFIG_LWIP_IPV6 instead of
+          LWIP_IPV6. In the generated header, the prefix is removed.
+
+        - For boolean options, use y or n instead of 0 and 1 in Kconfig.
+          For example CONFIG_LWIP_IPV6=y instead of #define LWIP_IPV6 1.
+
+        - Default values for some integer options are using formulas referencing other
+          options. For example, TCP_WND default is (4 * TCP_MSS). Kconfig does not
+          support this, so this option has string type instead of int. The consequence
+          is that you must write quotes in Kconfig for such settings, even if entering
+          integer value, for example CONFIG_TCP_WND="5840".
+          There are more such options, please pay attention to the type definition in
+          Kconfig and any Kconfig warnings in the output of processing.
+
+        - Default values for some options are referencing other options, without using
+          formulas. For example TCP_TTL defaults to IP_DEFAULT_TTL. But since Kconfig
+          translates defaults to values, if you change IP_DEFAULT_TTL later, you may
+          need to override the TCP_TTL to the same value as well (if you still want
+          it the same as IP_DEFAULT_TTL).
+
+        - Options which are function macros, taking no parameters, have a single
+          space between the braces. For example the following written in manually
+          edited lwipopts.h:
+          #define LWIP_ASSERT_CORE_LOCKED() sys_check_core_locking()
+          would be like this in Kconfig instead:
+          CONFIG_LWIP_ASSERT_CORE_LOCKED( )="sys_check_core_locking()"
+
+        - Some functions macros are used in the lwIP code if they are defined.
+          Because Kconfig generates string options with empty value, it would result
+          in a compilation error. Therefore such options have _CUSTOM suffix in Kconfig
+          and the final option is hidden, without a prompt, generated only when the one
+          with the _CUSTOM suffix does not have empty string value. Example is
+          LOCK_TCPIP_CORE option, where it could be written as
+          CONFIG_LOCK_TCPIP_CORE_CUSTOM( )="sys_lock_tcpip_core()" instead of
+          CONFIG_LOCK_TCPIP_CORE( )="sys_lock_tcpip_core()".
+
+        - Function signatures cannot be written in the generated lwipopts_gen.h.
+          But it can be written in CONFIG_LWIP_OPT_H_CODE_LINE_N options, where
+          N is a line number. It will appear in template/kconfig/lwipopts.h before
+          lwipopts_gen.h is included. That way the signatures will be visible for
+          the code which uses the function macros. For example the options to bring
+          some function signatures from NXP porting layer could be entered like this
+          for FreeRTOS projects:
+          CONFIG_LWIP_OPT_H_CODE_LINE_1="void sys_lock_tcpip_core(void);"
+          CONFIG_LWIP_OPT_H_CODE_LINE_2="void sys_unlock_tcpip_core(void);"
+          CONFIG_LWIP_OPT_H_CODE_LINE_3="void sys_check_core_locking(void);"
+          CONFIG_LWIP_OPT_H_CODE_LINE_4="void sys_mark_tcpip_thread(void);"
+          or for bare-metal projects:
+          CONFIG_LWIP_OPT_H_CODE_LINE_1="void sys_check_core_locking(void);"
+          Note that the "line numbers" must be used from 1 and numbers cannot be skipped.
+          So it is not possible to comment or delete CONFIG_LWIP_OPT_H_CODE_LINE_2 and
+          continue with CONFIG_LWIP_OPT_H_CODE_LINE_3, all must be renumbered.
+          The function signatures must use only basic C data types, no data types or
+          typedefs from stdint.h or lwIP etc. There might be a cast used in the function
+          macro option if needed.
+
+        - Some boolean options, which are just defined without value in C code, must still
+          be written with a value. Example is LWIP_DEBUG, it would be written as
+          CONFIG_LWIP_DEBUG=y or CONFIG_LWIP_DEBUG=n. Other such options are
+          LWIP_PROVIDE_ERRNO and LWIP_ENET_FLEXIBLE_CONFIGURATION.
+
+        - Note that Kconfig does not generate boolean values if they are set to "n".
+          The file template/kconfig/lwipopts.h defines the non-generated options to 0,
+          so that lwIP does not define them again to 1 (if it has such default value
+          in its code).
+
+        - When using Kconfig, do not define LWIP_RAND. It's function macro is defined
+          in the porting layer in cc.h. See LWIP_DEFINE_LWIP_RAND_IN_CC_H there and in
+          Kconfig.
+
+        - All of options from opt.h, some of the applications and porting layer options
+          have been enabled Kconfig. If you find something missing, such macro can be
+          added to a project command line or manually edited in lwipopts_gen.h (if it is
+          used and will not be regenerated).
+
+        - Formatting macros like X8_F, U16_F, etc. are not present in Kconfig system
+          and does not need to be put into lwipopts.h, see below.
+
+      - Default values for formatting macros like X8_F, U16_F, etc. are defined in cc.h,
+        so it does not need to be entered in lwipopts.h.
+
     - Bug fixes:
       - src/apps/mdns: mdns_resp_remove_netif stops all timeouts related to the netif now.
         This prevent the timeout handlers to send answers on netifs which already have mDNS
