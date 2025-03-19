@@ -9,6 +9,12 @@
   change log below contains SHA-1 hashes of GIT commits used when importing the code into the SDK.
 
   - 2.2.1_rev4
+    - New features:
+      - Enabled build of ALTCP_TLS:
+        - This enables option to use ALTCP with mbedTLS for transparent TLS.
+        - Added new MCUX_COMPONENT_middleware.lwip.apps.altcp_tls component to Kconfig.
+        - Updated CMake to compile the source files if the component is enabled.
+        - Added ALTPC_MBEDTLS configuration settings to Kconfig.
     - Bug fixes:
       - src/apps/altcp_tls: fixed compilation when MBEDTLS_HAVE_TIME is not defined.
 

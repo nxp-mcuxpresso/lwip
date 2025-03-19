@@ -44,6 +44,9 @@ if MCUX_COMPONENT_middleware.lwip
     config MCUX_COMPONENT_middleware.lwip.contrib.ping
         bool "Ping Sender"
 
+    config MCUX_COMPONENT_middleware.lwip.apps.altcp_tls
+        bool "ALTCP TLS"
+
     config MCUX_COMPONENT_middleware.lwip.apps.lwiperf
         bool "iPerf"
         imply SO_REUSE
@@ -3758,12 +3761,112 @@ if MCUX_COMPONENT_middleware.lwip
                     config LWIP_ALTCP_TLS
                         bool "LWIP_ALTCP_TLS"
                         default n
+                        depends on LWIP_ALTCP
                         help
                             No prefix in generated macro
                             LWIP_ALTCP_TLS==1: enable TLS support for altcp API.
                             This needs a port of the functions in altcp_tls.h to a TLS library.
                             A port to ARM mbedtls is provided with lwIP, see apps/altcp_tls/ directory
                             and LWIP_ALTCP_TLS_MBEDTLS option.
+
+                    config LWIP_ALTCP_TLS_MBEDTLS
+                        bool "LWIP_ALTCP_TLS_MBEDTLS"
+                        default n
+                        depends on LWIP_ALTCP_TLS
+                        help
+                            No prefix in generated macro
+                            If enabled, mbedTLS will be used for TLS support in the altcp API.
+                            The mbedTLS include directory must be reachable via include search path.
+
+                    config ALTCP_MBEDTLS_DEBUG
+                        string "ALTCP_MBEDTLS_DEBUG"
+                        default "LWIP_DBG_OFF"
+                        depends on LWIP_ALTCP_TLS_MBEDTLS
+                        help
+                            No prefix in generated macro
+                            Configure debug level of the ALTCP mbedTLS file.
+
+                    config ALTCP_MBEDTLS_LIB_DEBUG
+                        string "ALTCP_MBEDTLS_LIB_DEBUG"
+                        default "LWIP_DBG_OFF"
+                        depends on LWIP_ALTCP_TLS_MBEDTLS
+                        help
+                            No prefix in generated macro
+                            Configure lwIP debug level of the mbedTLS library.
+
+                    config ALTCP_MBEDTLS_LIB_DEBUG_LEVEL_MIN
+                        int "ALTCP_MBEDTLS_LIB_DEBUG_LEVEL_MIN"
+                        default 0
+                        depends on LWIP_ALTCP_TLS_MBEDTLS
+                        help
+                            No prefix in generated macro
+                            type unsigned
+                            Configure minimum internal debug level of the mbedTLS library.
+
+                    config ALTCP_MBEDTLS_USE_SESSION_CACHE
+                        bool "ALTCP_MBEDTLS_USE_SESSION_CACHE"
+                        default n
+                        depends on LWIP_ALTCP_TLS_MBEDTLS
+                        help
+                            No prefix in generated macro
+                            Enable the basic session cache for mbedTLS.
+                            ATTENTION: Using a session cache can lower security by reusing keys!
+
+                    config ALTCP_MBEDTLS_SESSION_CACHE_SIZE
+                        int "ALTCP_MBEDTLS_SESSION_CACHE_SIZE"
+                        default 30
+                        depends on ALTCP_MBEDTLS_USE_SESSION_CACHE
+                        help
+                            No prefix in generated macro
+                            type unsigned
+                            Maximum number of sessions to be stored in the basic session cache.
+
+                    config ALTCP_MBEDTLS_SESSION_CACHE_TIMEOUT_SECONDS
+                        int "ALTCP_MBEDTLS_SESSION_CACHE_TIMEOUT_SECONDS"
+                        default 3600
+                        depends on ALTCP_MBEDTLS_USE_SESSION_CACHE
+                        help
+                            No prefix in generated macro
+                            type unsigned
+                            Set a session timeout in seconds for the basic session cache.
+
+                    config ALTCP_MBEDTLS_USE_SESSION_TICKETS
+                        bool "ALTCP_MBEDTLS_USE_SESSION_TICKETS"
+                        default n
+                        depends on LWIP_ALTCP_TLS_MBEDTLS
+                        help
+                            No prefix in generated macro
+                            Use session tickets to speed up connection setup.
+                            Requires MBEDTLS_SSL_SESSION_TICKETS enabled in mbedTLS config.
+                            ATTENTION: Using session tickets can lower security by reusing keys!
+
+                    config ALTCP_MBEDTLS_SESSION_TICKET_CIPHER
+                        string "ALTCP_MBEDTLS_SESSION_TICKET_CIPHER"
+                        default "MBEDTLS_CIPHER_AES_256_GCM"
+                        depends on ALTCP_MBEDTLS_USE_SESSION_TICKETS
+                        help
+                            No prefix in generated macro
+                            Session ticket cipher to use.
+
+                    config ALTCP_MBEDTLS_SESSION_TICKET_TIMEOUT_SECONDS
+                        int "ALTCP_MBEDTLS_SESSION_TICKET_TIMEOUT_SECONDS"
+                        default 86400
+                        depends on ALTCP_MBEDTLS_USE_SESSION_TICKETS
+                        help
+                            No prefix in generated macro
+                            type unsigned
+                            Maximum timeout for session tickets in seconds.
+
+                    config ALTCP_MBEDTLS_AUTHMODE
+                        string "Certificate verification mode"
+                        default "MBEDTLS_SSL_VERIFY_OPTIONAL"
+                        depends on LWIP_ALTCP_TLS_MBEDTLS
+                        help
+                            No prefix in generated macro
+                            Certificate verification mode:
+                            MBEDTLS_SSL_VERIFY_NONE - No verification
+                            MBEDTLS_SSL_VERIFY_OPTIONAL - Optional verification (default)
+                            MBEDTLS_SSL_VERIFY_REQUIRED - Required verification (recommended)
                 endmenu
             endmenu
 

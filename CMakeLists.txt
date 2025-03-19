@@ -336,6 +336,23 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.contrib.ping)
 
 endif()
 
+if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.altcp_tls)
+    mcux_add_include(
+        INCLUDES
+            src/apps/altcp_tls
+    )
+
+    mcux_add_source(
+        SOURCES
+            src/apps/altcp_tls/altcp_tls_mbedtls.c
+            src/apps/altcp_tls/altcp_tls_mbedtls_mem.c
+            src/apps/altcp_tls/altcp_tls_mbedtls_mem.h
+            src/apps/altcp_tls/altcp_tls_mbedtls_structs.h
+            src/include/lwip/apps/altcp_proxyconnect.h
+            src/include/lwip/apps/altcp_tls_mbedtls_opts.h
+    )
+endif()
+
 if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.lwiperf)
     mcux_add_source(
         SOURCES
