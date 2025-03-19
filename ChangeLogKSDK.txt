@@ -8,6 +8,8 @@
   The development versions (X.Y.Z.dev) do not refer to a single source code snapshots. To avoid ambiguity,
   change log below contains SHA-1 hashes of GIT commits used when importing the code into the SDK.
 
+  - 2.2.1_rev4
+
   - 2.2.1_rev3
     - New features:
       - Added optional ability to generate lwIP options header file from Kconfig. The feature
