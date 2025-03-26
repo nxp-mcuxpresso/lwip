@@ -32,7 +32,7 @@
 
 /*
  * Copyright (c) 2013-2016, Freescale Semiconductor, Inc.
- * Copyright 2016-2024 NXP
+ * Copyright 2016-2025 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -574,6 +574,9 @@ void ethernetif_plat_init(struct netif *netif,
     ethernetif->ep_config->entryNum = 2;
 #endif
 
+#if (NETC_VSI_NUM_USED > 0) && defined(NETC_VSI_PREINIT_FUNC)
+    ethernetif->ep_config->preinitVsi = NETC_VSI_PREINIT_FUNC;
+#endif
     for (i = 0; i < NETC_RXBUFF_NUM; i++)
     {
         ethernetif->rxPbufs[i].p.custom_free_function = rx_pbuf_free_from_lwip;

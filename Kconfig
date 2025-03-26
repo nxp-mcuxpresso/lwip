@@ -1200,6 +1200,23 @@ if MCUX_COMPONENT_middleware.lwip
                         No prefix in generated macro
                         type unsigned
 
+                config NETC_VSI_PREINIT_FUNC_CUSTOM
+                    string "NETC_VSI_PREINIT_FUNC"
+                    default ""
+                    depends on MCUX_COMPONENT_middleware.lwip.netc_ethernetif
+                    depends on !NETC_PORT_USE_INCLUDES
+                    help
+                        No prefix in generated macro
+
+                config NETC_VSI_PREINIT_FUNC
+                    string
+                    default NETC_VSI_PREINIT_FUNC_CUSTOM
+                    depends on MCUX_COMPONENT_middleware.lwip.netc_ethernetif
+                    depends on !NETC_PORT_USE_INCLUDES
+                    depends on NETC_VSI_PREINIT_FUNC_CUSTOM != ""
+                    help
+                        No prefix in generated macro
+
                 config NETC_MII_MODE
                     string "NETC_MII_MODE"
                     default "kNETC_RmiiMode"

@@ -15,6 +15,7 @@
         - Added new MCUX_COMPONENT_middleware.lwip.apps.altcp_tls component to Kconfig.
         - Updated CMake to compile the source files if the component is enabled.
         - Added ALTPC_MBEDTLS configuration settings to Kconfig.
+      - Added support for NETC VSI pre-init.
     - Bug fixes:
       - src/apps/altcp_tls: fixed compilation when MBEDTLS_HAVE_TIME is not defined.
 
