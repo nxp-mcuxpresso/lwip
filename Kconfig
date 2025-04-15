@@ -2320,7 +2320,7 @@ if MCUX_COMPONENT_middleware.lwip
 
                     config LWIP_NUM_SYS_TIMEOUT_INTERNAL
                         string "LWIP_NUM_SYS_TIMEOUT_INTERNAL"
-                        default "(LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + LWIP_ACD + LWIP_IGMP + LWIP_DNS + PPP_NUM_TIMEOUTS + (LWIP_IPV6 * (1 + LWIP_IPV6_REASS + LWIP_IPV6_MLD + LWIP_IPV6_DHCP6)))"
+                        default "(LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (LWIP_DHCP_FINE_TIMERS_ONDEMAND ? LWIP_DHCP : 2*LWIP_DHCP) + LWIP_ACD + (LWIP_IGMP_TIMERS_ONDEMAND ? 0 : LWIP_IGMP) + (LWIP_DNS_TIMERS_ONDEMAND ? 0 : LWIP_DNS) + PPP_NUM_TIMEOUTS + (LWIP_IPV6 * (1 + LWIP_IPV6_REASS + (LWIP_MLD6_TIMERS_ONDEMAND ? 0 : LWIP_IPV6_MLD) + LWIP_IPV6_DHCP6)))"
                         help
                             No prefix in generated macro
                             The number of sys timeouts used by the core stack (not apps)
@@ -6262,6 +6262,61 @@ if MCUX_COMPONENT_middleware.lwip
                 default n
                 help
                     No prefix in generated macro
+
+            menu "On-demand Timer Configuration"
+                config LWIP_DHCP_FINE_TIMERS_ONDEMAND
+                    bool "LWIP_DHCP_FINE_TIMERS_ONDEMAND"
+                    default n
+                    help
+                        No prefix in generated macro
+                        When enabled, DHCP fine timers run on-demand instead of periodically.
+                        This reduces CPU usage when DHCP services are not actively needed.
+
+                config LWIP_DNS_TIMERS_ONDEMAND
+                    bool "LWIP_DNS_TIMERS_ONDEMAND"
+                    default n
+                    help
+                        No prefix in generated macro
+                        When enabled, DNS timers run on-demand instead of periodically.
+                        This improves efficiency by only running when DNS resolution is
+                        actively needed.
+
+                config LWIP_IGMP_TIMERS_ONDEMAND
+                    bool "LWIP_IGMP_TIMERS_ONDEMAND"
+                    default n
+                    help
+                        No prefix in generated macro
+                        When enabled, IGMP timers run on-demand instead of periodically.
+                        This reduces processing overhead when multicast functionality
+                        isn't in active use.
+
+                config LWIP_IP4_REASSEMBLY_TIMERS_ONDEMAND
+                    bool "LWIP_IP4_REASSEMBLY_TIMERS_ONDEMAND"
+                    default n
+                    help
+                        No prefix in generated macro
+                        When enabled, IPv4 fragment reassembly timers run on-demand instead
+                        of periodically. This reduces system overhead when IPv4 fragmentation
+                        isn't actively occurring.
+
+                config LWIP_IP6_REASSEMBLY_TIMERS_ONDEMAND
+                    bool "LWIP_IP6_REASSEMBLY_TIMERS_ONDEMAND"
+                    default n
+                    help
+                        No prefix in generated macro
+                        When enabled, IPv6 fragment reassembly timers run on-demand instead
+                        of periodically. This reduces CPU usage when IPv6 fragment reassembly
+                        is not actively needed.
+
+                config LWIP_MLD6_TIMERS_ONDEMAND
+                    bool "LWIP_MLD6_TIMERS_ONDEMAND"
+                    default n
+                    help
+                        No prefix in generated macro
+                        When enabled, Multicast Listener Discovery timers for IPv6 run
+                        on-demand instead of periodically. This improves power efficiency
+                        on systems with limited IPv6 multicast usage.
+            endmenu
         endmenu
     endif
 endif

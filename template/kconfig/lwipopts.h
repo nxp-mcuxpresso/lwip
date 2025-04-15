@@ -1129,6 +1129,30 @@ LWIP_OPT_H_CODE_LINE_100
 #define LWIP_DISABLE_PBUF_POOL_SIZE_SANITY_CHECKS 0
 #endif
 
+#ifndef LWIP_DHCP_FINE_TIMERS_ONDEMAND
+#define LWIP_DHCP_FINE_TIMERS_ONDEMAND 0
+#endif
+
+#ifndef LWIP_DNS_TIMERS_ONDEMAND
+#define LWIP_DNS_TIMERS_ONDEMAND 0
+#endif
+
+#ifndef LWIP_IGMP_TIMERS_ONDEMAND
+#define LWIP_IGMP_TIMERS_ONDEMAND 0
+#endif
+
+#ifndef LWIP_IP4_REASSEMBLY_TIMERS_ONDEMAND
+#define LWIP_IP4_REASSEMBLY_TIMERS_ONDEMAND 0
+#endif
+
+#ifndef LWIP_IP6_REASSEMBLY_TIMERS_ONDEMAND
+#define LWIP_IP6_REASSEMBLY_TIMERS_ONDEMAND 0
+#endif
+
+#ifndef LWIP_MLD6_TIMERS_ONDEMAND
+#define LWIP_MLD6_TIMERS_ONDEMAND 0
+#endif
+
 /*
  * Some behaviour is considered enabled if some macro is just defined.
  * If such macros are defined to 0 in Kconfig, undefine them so they are not

@@ -13,6 +13,21 @@ KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 
 ## 2.2.1_rev6 (newest)
 ### New features:
+- Support for on-demand timers for some of the protocols. Reused from Espressif open source lwIP port.
+  LwIP default protocol timer handlers are invoked periodically, even if there is nothing to do.
+  This is not suitable for low-power applications entering into a sleep mode. The added feature
+  calculates the time when the timer callback should be invoked, instead of waking-up periodically
+  to only check if there is anything to do or not.
+  The feature is turned off by default and can be enabled by the following options:
+  - LWIP_IP4_REASSEMBLY_TIMERS_ONDEMAND
+  - LWIP_IP6_REASSEMBLY_TIMERS_ONDEMAND
+  - LWIP_DNS_TIMERS_ONDEMAND
+  - LWIP_DHCP_FINE_TIMERS_ONDEMAND
+  - LWIP_IGMP_TIMERS_ONDEMAND
+  - LWIP_MLD6_TIMERS_ONDEMAND
+
+  Note that other protocols don't have on-demand timers implemented, so for example if there are
+  open TCP connections, its protocol timers will be still invoked periodically.
 - NETC adaptation layer: Possibility to use switch port, see NETC_USE_SWT and related options.
 - New option ETH_USE_GPIO_ADAPTER which can be used on platforms without GPIO adapter to bypass the code using it.
 - New option ETH_ENET_QOS_MII_MODE to override default MII mode for ENET QoS.

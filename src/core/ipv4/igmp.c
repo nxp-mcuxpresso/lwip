@@ -109,7 +109,7 @@ static void   igmp_send(struct netif *netif, struct igmp_group *group, u8_t type
 static ip4_addr_t     allsystems;
 static ip4_addr_t     allrouters;
 
-#if ESP_LWIP_IGMP_TIMERS_ONDEMAND
+#if LWIP_IGMP_TIMERS_ONDEMAND
 #include <stdbool.h>
 static bool is_tmr_start = false;
 #endif
@@ -644,7 +644,7 @@ igmp_leavegroup_netif(struct netif *netif, const ip4_addr_t *groupaddr)
   }
 }
 
-#if ESP_LWIP_IGMP_TIMERS_ONDEMAND
+#if LWIP_IGMP_TIMERS_ONDEMAND
 /**
  * Wrapper function with matching prototype which calls the actual callback
  */
@@ -663,7 +663,7 @@ void
 igmp_tmr(void)
 {
   struct netif *netif;
-#if ESP_LWIP_IGMP_TIMERS_ONDEMAND
+#if LWIP_IGMP_TIMERS_ONDEMAND
   bool tmr_restart = false;
 #endif
 
@@ -676,7 +676,7 @@ igmp_tmr(void)
         if (group->timer == 0) {
           igmp_timeout(netif, group);
         }
-#if ESP_LWIP_IGMP_TIMERS_ONDEMAND
+#if LWIP_IGMP_TIMERS_ONDEMAND
         else {
           tmr_restart = true;
         }
@@ -685,7 +685,7 @@ igmp_tmr(void)
       group = group->next;
     }
   }
-#if ESP_LWIP_IGMP_TIMERS_ONDEMAND
+#if LWIP_IGMP_TIMERS_ONDEMAND
   if (tmr_restart) {
     sys_timeout(IGMP_TMR_INTERVAL, igmp_timeout_cb, NULL);
   } else {
@@ -739,7 +739,7 @@ igmp_start_timer(struct igmp_group *group, u8_t max_time)
   if (group->timer == 0) {
     group->timer = 1;
   }
-#if ESP_LWIP_IGMP_TIMERS_ONDEMAND
+#if LWIP_IGMP_TIMERS_ONDEMAND
   if (!is_tmr_start) {
     sys_timeout(IGMP_TMR_INTERVAL, igmp_timeout_cb, NULL);
     is_tmr_start = true;

@@ -103,7 +103,7 @@ static void mld6_set_max_response_delay(struct mld_data *mld, u16_t max_response
 static void mld6_set_general_report_tmr(struct mld_data *mld);
 static void mld6_send(struct netif *netif, struct mld_group *group, u8_t send_change_report);
 
-#if ESP_LWIP_MLD6_TIMERS_ONDEMAND
+#if LWIP_MLD6_TIMERS_ONDEMAND
 #include <stdbool.h>
 static bool is_tmr_start = false;
 #endif
@@ -615,7 +615,7 @@ mld6_leavegroup_netif(struct netif *netif, const ip6_addr_t *groupaddr)
   return ERR_VAL;
 }
 
-#if ESP_LWIP_MLD6_TIMERS_ONDEMAND
+#if LWIP_MLD6_TIMERS_ONDEMAND
 /**
  * Wrapper function with matching prototype which calls the actual callback
  */
@@ -643,7 +643,7 @@ mld6_set_change_report_tmr(struct mld_data *mld) {
     LWIP_DEBUGF(MLD6_DEBUG | LWIP_DBG_TRACE, ("already running\n"));
   }
 
-#if ESP_LWIP_MLD6_TIMERS_ONDEMAND
+#if LWIP_MLD6_TIMERS_ONDEMAND
   if (!is_tmr_start) {
     sys_timeout(MLD6_TMR_INTERVAL, mld6_timeout_cb, NULL);
     is_tmr_start = true;
@@ -708,7 +708,7 @@ mld6_set_general_report_tmr(struct mld_data *mld) {
     mld->general_report_tmr = 1;
   }
 
-#if ESP_LWIP_MLD6_TIMERS_ONDEMAND
+#if LWIP_MLD6_TIMERS_ONDEMAND
   if (!is_tmr_start) {
     sys_timeout(MLD6_TMR_INTERVAL, mld6_timeout_cb, NULL);
     is_tmr_start = true;
@@ -727,7 +727,7 @@ void
 mld6_tmr(void) {
   struct netif *netif;
 
-#if ESP_LWIP_MLD6_TIMERS_ONDEMAND
+#if LWIP_MLD6_TIMERS_ONDEMAND
   bool tmr_restart = false;
 #endif
 
@@ -736,7 +736,7 @@ mld6_tmr(void) {
     if (mld != NULL) {
       if (mld->chg_report_tmr > 1) {
         mld->chg_report_tmr--;
-#if ESP_LWIP_MLD6_TIMERS_ONDEMAND
+#if LWIP_MLD6_TIMERS_ONDEMAND
         tmr_restart = true;
 #endif
       } else if (mld->chg_report_tmr == 1) {
@@ -748,7 +748,7 @@ mld6_tmr(void) {
         if (mld->groups_to_report != NULL) {
           /* There is still some groups to send set timer again */
           mld6_set_change_report_tmr(mld);
-#if ESP_LWIP_MLD6_TIMERS_ONDEMAND
+#if LWIP_MLD6_TIMERS_ONDEMAND
           tmr_restart = true;
 #endif
         }
@@ -756,7 +756,7 @@ mld6_tmr(void) {
 
       if (mld->general_report_tmr > 1) {
         mld->general_report_tmr--;
-#if ESP_LWIP_MLD6_TIMERS_ONDEMAND
+#if LWIP_MLD6_TIMERS_ONDEMAND
         tmr_restart = true;
 #endif
       } else if (mld->general_report_tmr == 1) {
@@ -767,7 +767,7 @@ mld6_tmr(void) {
     }
   } /* NETIF_FOREACH */
 
-#if ESP_LWIP_MLD6_TIMERS_ONDEMAND
+#if LWIP_MLD6_TIMERS_ONDEMAND
   if (tmr_restart) {
     /* Cancel any existing timeout first */
     if (is_tmr_start) {
