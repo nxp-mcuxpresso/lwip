@@ -18,6 +18,10 @@
       - Added support for NETC VSI pre-init.
     - Bug fixes:
       - src/apps/altcp_tls: fixed compilation when MBEDTLS_HAVE_TIME is not defined.
+      - src/core/ipv6/mld6.c: fixed the setting of MLDv6 general report delay.
+        Especially when the maximum response delay was smaller than MLD6_TMR_INTERVAL,
+        it could be assigned to a value out of the requested range, or end up not sending
+        the report at all.
 
   - 2.2.1_rev3
     - New features:
