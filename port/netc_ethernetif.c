@@ -837,8 +837,10 @@ err_t ethernetif_linkoutput(struct netif *netif, struct pbuf *p)
 }
 
 /**
- * Should be called at the beginning of the program to set up the
- * first network interface. It calls the function ethernetif_init() to do the
+ * Should be called by lwIP at the beginning of the program to set up the
+ * FIRST available network interface.
+ *
+ * It calls the function ethernetif_init() to do the
  * actual setup of the hardware.
  *
  * This function should be passed as a parameter to netif_add().
