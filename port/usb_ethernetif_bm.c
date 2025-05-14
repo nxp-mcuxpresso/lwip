@@ -167,7 +167,11 @@ static void USB_HostCdcEcmDataInCallback(void *param, uint8_t *data, uint32_t da
         else
         {
             ecmInstance->netifUsbStateEvent |= CDC_ECM_STATE_XFER_DATA_IN;
-            usb_echo("CDC-ECM bulk in transfer error.\r\n");
+
+            if (dataLength)
+            {
+                usb_echo("CDC-ECM bulk in transfer error. Lost datalength: %d\r\n", dataLength);
+            }
         }
         return;
     }
@@ -212,7 +216,11 @@ static void USB_HostCdcEcmDataOutCallback(void *param, uint8_t *data, uint32_t d
         else
         {
             ecmInstance->netifUsbDataOutEvent |= CDC_ECM_STATE_XFER_DATA_OUT;
-            usb_echo("CDC-ECM bulk out transfer error.\r\n");
+
+            if (dataLength)
+            {
+                usb_echo("CDC-ECM bulk out transfer error. Lost datalength: %d\r\n", dataLength);
+            }
         }
         return;
     }
@@ -1538,7 +1546,7 @@ err_t USB_EthernetIfOutPut(struct netif *netif, struct pbuf *p)
             return ERR_CONN;
         }
 
-        if (p->tot_len >= p->len)
+        if (p->tot_len >= p->len && p->tot_len > 0)
         {
             uint32_t total        = p->tot_len;
             uint32_t transferDone = 0U;
@@ -1550,15 +1558,21 @@ err_t USB_EthernetIfOutPut(struct netif *netif, struct pbuf *p)
                 return ERR_BUF;
             }
 
+            u16_t cpylen = pbuf_copy_partial(p, ecmInstance->dataSendBuffer, p->tot_len, 0);
+            LWIP_ASSERT("pbuf_copy_partial error cpylen != p->tot_len", cpylen == p->tot_len);
+
             while (total)
             {
                 ecmInstance->dataState = USB_HostCdcEcmDataXfering;
-                buflen                 = total;
                 if (total > ecmInstance->deviceMaxSegmentSize)
                 {
                     buflen = ecmInstance->deviceMaxSegmentSize;
                 }
-                USB_HostCdcEcmDataSend(ecmInstance->classHandle, ((uint8_t *)p->payload + transferDone), buflen,
+                else
+                {
+                    buflen = total;
+                }
+                USB_HostCdcEcmDataSend(ecmInstance->classHandle, ecmInstance->dataSendBuffer + transferDone, buflen,
                                        ecmInstance->deviceMaxSegmentSize, USB_HostCdcEcmDataOutCallback, ecmInstance);
                 transferDone += buflen;
                 total -= buflen;
