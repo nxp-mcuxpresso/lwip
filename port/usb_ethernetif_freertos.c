@@ -1600,6 +1600,12 @@ err_t USB_EthernetIfOutPut(struct netif *netif, struct pbuf *p)
                 return ERR_BUF;
             }
 
+            if (sizeof(ecmInstance->dataSendBuffer) < p->tot_len)
+            {
+                usb_echo("USB sending buffer is insuffient. Ethernet frame length: %d, USB buffer length: %d\r\n", p->tot_len, sizeof(ecmInstance->dataSendBuffer));
+                return ERR_BUF;
+            }
+
             u16_t cpylen = pbuf_copy_partial(p, ecmInstance->dataSendBuffer, p->tot_len, 0);
             LWIP_ASSERT("pbuf_copy_partial error cpylen != p->tot_len", cpylen == p->tot_len);
 
