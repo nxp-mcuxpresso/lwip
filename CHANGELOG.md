@@ -84,7 +84,7 @@ KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
   
     - Some functions macros are used in the lwIP code if they are defined.
       Because Kconfig generates string options with empty value, it would result
-      in a compilation error. Therefore such options have `_CUSTOM` suffix in Kconfig
+      in a compilation error. Therefore, such options have `_CUSTOM` suffix in Kconfig
       and the final option is hidden, without a prompt, generated only when the one
       with the `_CUSTOM` suffix does not have empty string value. Example is
       `LOCK_TCPIP_CORE` option, where it could be written as
@@ -131,7 +131,7 @@ KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
       in the porting layer in `cc.h`. See `LWIP_DEFINE_LWIP_RAND_IN_CC_H` there and in
       Kconfig.
   
-    - All of options from `opt.h`, some of the applications and porting layer options
+    - All options from `opt.h` and some of the applications and porting layer options
       have been enabled Kconfig. If you find something missing, such macro can be
       added to a project command line or manually edited in `lwipopts_gen.h` (if it is
       used and will not be regenerated).
@@ -168,7 +168,7 @@ KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
   message handling will be started to handle VSI-PSI messages.
 ### Bug fixes:
 - Added the missing implementation for `IP_FORWARD_ALLOW_TX_ON_RX_NETIF` option in the function ip6_forward.
-  Therefore IPv6 packets could be sent back out on the netif where they where originally received from.
+  Therefore, IPv6 packets could be sent back out on the netif where they were originally received from.
 - NETC adaptation layer: Do not call `xEventGroupSetBits` from ISR.
 - Ethernet adaptation layers: Default value of priority of the receive task (`ETH_RX_TASK_PRIO`) is set lower
   than the priority of the FreeRTOS daemon task (timer task).

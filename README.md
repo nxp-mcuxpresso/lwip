@@ -21,7 +21,7 @@ If the intended contribution is a bugfix or improvement for NXP porting layer or
 This fork of lwIP contains specific modifications and enhancements for NXP MCUXpresso SDK integration, including:
 - Adaptation layers for some of the network interfaces found on NXP MCU platforms.
 - Adaptation layer supporting compilers used with MCUXpresso SDK.
-- Operation system abstraction layers for FreeRTOS and bare-metal.
+- Operating system abstraction layers for FreeRTOS and bare-metal.
 - NXP implementation of HTTP server.
 - Bugfixes and modifications of upstream code, which could not be upstreamed directly.
 - CMake and Kconfig files for integration with MCUXpresso SDK build system.
