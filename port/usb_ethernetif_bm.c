@@ -1558,9 +1558,9 @@ err_t USB_EthernetIfOutPut(struct netif *netif, struct pbuf *p)
                 return ERR_BUF;
             }
 
-            if (sizeof(ecmInstance->dataSendBuffer) < p->tot_len)
+            if (CDC_ECM_DATA_BUFFER_LEN < p->tot_len)
             {
-                usb_echo("USB sending buffer is insuffient. Ethernet frame length: %d, USB buffer length: %d\r\n", p->tot_len, sizeof(ecmInstance->dataSendBuffer));
+                usb_echo("USB sending buffer is insuffient. Ethernet frame length: %d, USB buffer length: %d\r\n", p->tot_len, CDC_ECM_DATA_BUFFER_LEN);
                 return ERR_BUF;
             }
 
