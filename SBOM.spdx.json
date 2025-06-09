@@ -1,0 +1,76 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "spdxVersion": "SPDX-2.3",
+  "creationInfo": {
+    "created": "2025-06-09T06:32:34Z",
+    "creators": [
+      "Organization: NXP"
+    ],
+    "licenseListVersion": "3.20"
+  },
+  "name": "lwip-v25.06.00",
+  "dataLicense": "CC0-1.0",
+  "hasExtractedLicensingInfos": [
+    {
+      "licenseId": "LicenseRef-d26bcb7d-5bc8-4f05-8942-a3a42728a2e4",
+      "extractedText": "Public domain code is not subject to any license.",
+      "name": "Public Domain"
+    }
+  ],
+  "documentNamespace": "https://nxp.com/spdx/7825321f-eb27-4ec2-8629-de2d879d00f3",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-package-7825321f-eb27-4ec2-8629-de2d879d00f3",
+      "name": "lwip",
+      "versionInfo": "v25.06.00",
+      "licenseConcluded": "(BSD-3-Clause)",
+      "licenseDeclared": "(BSD-3-Clause)",
+      "downloadLocation": "https://github.com/nxp-mcuxpresso/lwip",
+      "originator": "Organization: NXP",
+      "supplier": "NOASSERTION",
+      "externalRefs": [],
+      "filesAnalyzed": false
+    },
+    {
+      "SPDXID": "SPDXRef-package-87476701-cd7b-494c-a778-27bd8fecc90f",
+      "name": "lwIP",
+      "versionInfo": "2.2.1",
+      "licenseConcluded": "BSD-3-Clause",
+      "licenseDeclared": "BSD-3-Clause",
+      "homepage": "http://savannah.nongnu.org/projects/lwip/",
+      "downloadLocation": "http://ports.ubuntu.com/ubuntu-ports/ubuntu-ports/pool/universe/l/lwip",
+      "externalRefs": [],
+      "filesAnalyzed": false,
+      "supplier": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-package-b10579af-35fd-4242-accb-d2fe7debce6e",
+      "name": "SHA-1 in C",
+      "versionInfo": "1",
+      "licenseConcluded": "LicenseRef-d26bcb7d-5bc8-4f05-8942-a3a42728a2e4",
+      "licenseDeclared": "LicenseRef-d26bcb7d-5bc8-4f05-8942-a3a42728a2e4",
+      "homepage": "http://www.mirrors.wiretapped.net/security/cryptography/hashes/sha1",
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [],
+      "filesAnalyzed": false,
+      "supplier": "NOASSERTION"
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-package-7825321f-eb27-4ec2-8629-de2d879d00f3"
+    },
+    {
+      "spdxElementId": "SPDXRef-package-7825321f-eb27-4ec2-8629-de2d879d00f3",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-package-b10579af-35fd-4242-accb-d2fe7debce6e"
+    },
+    {
+      "spdxElementId": "SPDXRef-package-7825321f-eb27-4ec2-8629-de2d879d00f3",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-package-87476701-cd7b-494c-a778-27bd8fecc90f"
+    }
+  ]
+}
