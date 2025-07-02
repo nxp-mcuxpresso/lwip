@@ -72,6 +72,9 @@
 #include "fsl_netc_msg.h"
 #endif
 #include "fsl_msgintr.h"
+#if defined(FSL_FEATURE_NETC_HAS_SWITCH_TAG) && FSL_FEATURE_NETC_HAS_SWITCH_TAG
+#include "fsl_netc_tag.h"
+#endif
 
 /*******************************************************************************
  * Definitions
@@ -680,15 +683,30 @@ static struct pbuf *ethernetif_rx_frame_to_pbufs(struct ethernetif *ethernetif, 
         netc_buffer_struct_t *bs    = &frame->buffArray[buf_n];
         rx_pbuf_wrapper_t *pw_found = NULL;
         int n                       = 0;
+        void *buffer                = bs->buffer;
+        uint16_t length             = bs->length;
+
+#if defined(FSL_FEATURE_NETC_HAS_SWITCH_TAG) && FSL_FEATURE_NETC_HAS_SWITCH_TAG
+        if ((buf_n == 0) && NETC_EnetcHasManagement(ethernetif->ep_handle->hw.base) &&
+            (getSiNum(ethernetif->ep_handle->cfg.si) == 0U)) {
+            size_t tagSize = sizeof(netc_swt_tag_host_t);
+
+            /* Drop switch tag after DMA/SMAC field */
+            for (int i = 0; i < length - 12 - tagSize; i++)
+                ((char *)buffer)[12 + i] = ((char *)buffer)[12 + tagSize + i];
+
+            length = length - tagSize;
+        }
+#endif
 
         // seek pbuf
         while ((n < NETC_RXBUFF_NUM) && (pw_found == NULL))
         {
-            if (ethernetif->rxPbufs[i].buffer == bs->buffer)
+            if (ethernetif->rxPbufs[i].buffer == buffer)
             {
                 pw_found = &ethernetif->rxPbufs[i];
 
-                p = pbuf_alloced_custom(PBUF_RAW, bs->length, PBUF_REF, &pw_found->p, bs->buffer, NETC_RXBUFF_SIZE);
+                p = pbuf_alloced_custom(PBUF_RAW, length, PBUF_REF, &pw_found->p, buffer, NETC_RXBUFF_SIZE);
                 LWIP_ASSERT("pbuf_alloced_custom() failed", p);
 
                 if (p_root == NULL)
@@ -766,14 +784,47 @@ err_t ethernetif_linkoutput(struct netif *netif, struct pbuf *p)
     {
         return ERR_BUF;
     }
-    else
-    {
+
+#if defined(FSL_FEATURE_NETC_HAS_SWITCH_TAG) && FSL_FEATURE_NETC_HAS_SWITCH_TAG
+    if (NETC_EnetcHasManagement(ethernetif->ep_handle->hw.base) &&
+        (getSiNum(ethernetif->ep_handle->cfg.si) == 0U)) {
+        size_t tagSize = sizeof(netc_swt_tag_forward_t);
+        netc_swt_tag_forward_t tag = {
+            .comTag = {
+                .tpid = NETC_SWITCH_DEFAULT_ETHER_TYPE,
+                .subType = kNETC_TagToPortNoTs,
+                .type = kNETC_TagForward,
+            }
+        };
+
+        if ((p->tot_len + tagSize) > (NETC_FRAME_MAX_FRAMELEN - NETC_FCS_LEN))
+        {
+            return ERR_BUF;
+        }
+
+        /* Copy DMAC/SMAC fields */
+        uCopied = pbuf_copy_partial(p, buff.buffer, 12, 0);
+        LWIP_ASSERT("uCopied != 12", 12);
+
+        /* Insert switch tag */
+        memcpy(&((char *)buff.buffer)[12], &tag, tagSize);
+
+        /* Copy the rest fields */
+        uCopied = pbuf_copy_partial(p, (void *)((uintptr_t)buff.buffer + 12 + tagSize), p->tot_len - 12, 12);
+        LWIP_ASSERT("uCopied != (p->tot_len - 12)", uCopied == (p->tot_len - 12));
+        buff.length = p->tot_len + tagSize;
+    } else {
         uCopied = pbuf_copy_partial(p, buff.buffer, p->tot_len, 0);
         LWIP_ASSERT("uCopied != p->tot_len", uCopied == p->tot_len);
+        buff.length = p->tot_len;
     }
-    /* Send frame. */
-
+#else
+    uCopied = pbuf_copy_partial(p, buff.buffer, p->tot_len, 0);
+    LWIP_ASSERT("uCopied != p->tot_len", uCopied == p->tot_len);
     buff.length = p->tot_len;
+#endif
+
+    /* Send frame. */
 
     status_t status = EP_SendFrame(ethernetif->ep_handle, 0 /*ring*/, &frame, NULL, NULL);
 
