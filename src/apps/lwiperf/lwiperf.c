@@ -19,7 +19,7 @@
 
 /*
  * Copyright (c) 2014 Simon Goldschmidt
- * Copyright 2019-2024 NXP
+ * Copyright 2019-2025 NXP
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
