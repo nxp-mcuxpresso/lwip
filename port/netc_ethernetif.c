@@ -226,6 +226,9 @@ AT_NONCACHEABLE_SECTION_ALIGN(static uint8_t psiMsgBuff1[1024], 32);
 #if (NETC_VSI_NUM_USED > 1)
 AT_NONCACHEABLE_SECTION_ALIGN(static uint8_t psiMsgBuff2[1024], 32);
 #endif
+#if (NETC_VSI_NUM_USED > 2)
+AT_NONCACHEABLE_SECTION_ALIGN(static uint8_t psiMsgBuff3[1024], 32);
+#endif
 /*!
  * @brief Used to wrap received data in a pbuf to be passed into lwIP
  *        without copying.
@@ -385,6 +388,9 @@ void msgintrCallback(MSGINTR_Type *base, uint8_t channel, uint32_t pendingIntr)
 #if (NETC_VSI_NUM_USED > 1)
     msg_recv_flags |= kNETC_PsiRxMsgFromVsi2Flag;
 #endif
+#if (NETC_VSI_NUM_USED > 2)
+    msg_recv_flags |= kNETC_PsiRxMsgFromVsi3Flag;
+#endif
 
     if (NULL == ethernetif)
     {
@@ -473,6 +479,13 @@ static void netc_si_msg_thread(void *arg)
             EP_PsiHandleRxMsg(ethernetif->ep_handle, 2, &msgInfo);
         }
 #endif
+#if (NETC_VSI_NUM_USED > 2)
+        result = EP_PsiRxMsg(ethernetif->ep_handle, kNETC_Vsi3, &msgInfo);
+        if (result == kStatus_Success)
+        {
+            EP_PsiHandleRxMsg(ethernetif->ep_handle, 3, &msgInfo);
+        }
+#endif
         sys_msleep(1U);
     }
 }
@@ -512,6 +525,9 @@ void ethernetif_plat_init(struct netif *netif,
 
 #if (NETC_VSI_NUM_USED > 1)
     msg_recv_flags |= kNETC_PsiRxMsgFromVsi2Flag;
+#endif
+#if (NETC_VSI_NUM_USED > 2)
+    msg_recv_flags |= kNETC_PsiRxMsgFromVsi3Flag;
 #endif
 
     ethernetif->netif = netif;
@@ -662,6 +678,9 @@ void ethernetif_plat_init(struct netif *netif,
 #endif
 #if (NETC_VSI_NUM_USED > 1)
     EP_PsiSetRxBuffer(ethernetif->ep_handle, kNETC_Vsi2, (uintptr_t)&psiMsgBuff2[0]);
+#endif
+#if (NETC_VSI_NUM_USED > 2)
+    EP_PsiSetRxBuffer(ethernetif->ep_handle, kNETC_Vsi3, (uintptr_t)&psiMsgBuff3[0]);
 #endif
 
 #if (NETC_VSI_NUM_USED > 0)
