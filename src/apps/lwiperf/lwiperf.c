@@ -59,6 +59,8 @@
 #include "lwip/igmp.h"
 #include "lwip/mld6.h"
 
+#include "fsl_common.h"
+
 #include <string.h>
 #include <stdbool.h>
 
