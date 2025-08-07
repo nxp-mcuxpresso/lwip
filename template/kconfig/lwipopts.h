@@ -341,6 +341,10 @@ LWIP_OPT_H_CODE_LINE_100
 #define NETC_PORT_USE_INCLUDES 0
 #endif
 
+#ifndef NETC_USE_SWT
+#define NETC_USE_SWT 0
+#endif
+
 #ifndef LWIP_STATS
 #define LWIP_STATS 0
 #endif

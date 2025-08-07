@@ -11,10 +11,13 @@ To avoid ambiguity, change log below contains SHA-1 hashes of GIT commits used w
 
 KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 
-## 2.2.1_rev5 (newest)
+## 2.2.1_rev6 (newest)
+### New features:
+- NETC adaptation layer: Possibility to use switch port, see NETC_USE_SWT and related options.
+
+## 2.2.1_rev5
 ### New features:
 - Iperf now tries to place buffers into fast memory.
-### Bug fixes:
 
 ## 2.2.1_rev4
 ### New features:

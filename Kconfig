@@ -1250,6 +1250,49 @@ if MCUX_COMPONENT_middleware.lwip
                     help
                         No prefix in generated macro
 
+                config NETC_USE_SWT
+                    bool "NETC_USE_SWT"
+                    default n
+                    depends on MCUX_COMPONENT_middleware.lwip.netc_ethernetif
+                    depends on !NETC_PORT_USE_INCLUDES
+                    help
+                        No prefix in generated macro
+                        Use switch port instead of endpoint port.
+
+                config NETC_SWT_MAX_PORT_NUM
+                    int "NETC_SWT_MAX_PORT_NUM"
+                    default 4
+                    depends on MCUX_COMPONENT_middleware.lwip.netc_ethernetif                    
+                    depends on !NETC_PORT_USE_INCLUDES
+                    depends on NETC_USE_SWT
+                    help
+                        No prefix in generated macro
+                        type unsigned
+                        Maximum number of switch ports.
+
+                config NETC_SWT_USED_PORT_BITMAP
+                    int "NETC_SWT_USED_PORT_BITMAP"
+                    default 5
+                    depends on MCUX_COMPONENT_middleware.lwip.netc_ethernetif                    
+                    depends on !NETC_PORT_USE_INCLUDES
+                    depends on NETC_USE_SWT
+                    help
+                        No prefix in generated macro
+                        type unsigned
+                        Enabled switch port bit map, bit n represents port n.
+                        Note: Be careful that some ports are multiplexed with SEMC.
+
+                config NETC_SWT_PSEUDO_PORT
+                    int "NETC_SWT_PSEUDO_PORT"
+                    default 4
+                    depends on MCUX_COMPONENT_middleware.lwip.netc_ethernetif                    
+                    depends on !NETC_PORT_USE_INCLUDES
+                    depends on NETC_USE_SWT
+                    help
+                        No prefix in generated macro
+                        type unsigned
+                        Switch pseudo port.
+
                 config FRAME_MAX_FRAMELEN
                     int "FRAME_MAX_FRAMELEN"
                     default 1536
