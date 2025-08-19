@@ -527,7 +527,6 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.enet_ethernetif)
     )
     mcux_add_source(
         SOURCES
-            port/enet_ethernetif.c
             port/ethernetif.c
             port/ethernetif.h
             port/ethernetif_mmac.c
@@ -538,6 +537,7 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.enet_ethernetif)
     mcux_add_source(
         SOURCES
             port/enet_ethernetif_lpc.c
+            port/enet_ethernetif.c
         COMPONENTS
             driver.lpc_enet
     )

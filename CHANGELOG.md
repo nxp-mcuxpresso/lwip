@@ -14,6 +14,8 @@ KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 ## 2.2.1_rev6 (newest)
 ### New features:
 - NETC adaptation layer: Possibility to use switch port, see NETC_USE_SWT and related options.
+- New option ETH_USE_GPIO_ADAPTER which can be used on platforms without GPIO adapter to bypass the code using it.
+- New option ETH_ENET_QOS_MII_MODE to override default MII mode for ENET QoS.
 
 ## 2.2.1_rev5
 ### New features:

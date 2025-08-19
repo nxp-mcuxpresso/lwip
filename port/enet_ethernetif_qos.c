@@ -180,7 +180,9 @@ struct ethernetif
     phy_duplex_t last_duplex;
     bool last_link_up;
 
+#if ETH_USE_GPIO_ADAPTER
     uint32_t intGpioHdl[((HAL_GPIO_HANDLE_SIZE + sizeof(uint32_t) - 1U) / sizeof(uint32_t))];
+#endif /* ETH_USE_GPIO_ADAPTER */
 };
 
 /*******************************************************************************
@@ -483,6 +485,9 @@ void ethernetif_plat_init(struct netif *netif,
     config.specialControl = kENET_QOS_HashMulticastEnable | kENET_QOS_StoreAndForward;
     config.rxBuffAlloc    = ethernetif_rx_alloc;
     config.rxBuffFree     = ethernetif_rx_free;
+#ifdef ETH_ENET_QOS_MII_MODE
+    config.miiMode        = ETH_ENET_QOS_MII_MODE;
+#endif
 
 #if (CHECKSUM_CHECK_IP == 0) || (CHECKSUM_CHECK_TCP == 0) || (CHECKSUM_CHECK_UDP == 0) || \
     (CHECKSUM_CHECK_ICMP == 0) || (CHECKSUM_CHECK_ICMP6 == 0)
@@ -531,11 +536,13 @@ phy_handle_t *ethernetif_get_phy(struct netif *netif_)
     return eif->phyHandle;
 }
 
+#if ETH_USE_GPIO_ADAPTER
 hal_gpio_handle_t ethernetif_get_int_gpio_hdl(struct netif *netif_)
 {
     struct ethernetif *eif = netif_->state;
     return (hal_gpio_handle_t)eif->intGpioHdl;
 }
+#endif /* ETH_USE_GPIO_ADAPTER */
 
 phy_speed_t ethernetif_get_link_speed(struct netif *netif_)
 {
@@ -852,6 +859,27 @@ err_t ethernetif_linkoutput(struct netif *netif, struct pbuf *p)
     return result;
 }
 
+void *ethernetif_get_enet_qos_base(const uint8_t enetIdx)
+{
+    ENET_QOS_Type *enets[] = ENET_QOS_BASE_PTRS;
+    int arrayIdx;
+    int enetCount;
+
+    for (arrayIdx = 0, enetCount = 0; arrayIdx < ARRAY_SIZE(enets); arrayIdx++)
+    {
+        if (enets[arrayIdx] != 0U) /* process only defined positions */
+        {                          /* (some SOC headers count ENETs from 1 instead of 0) */
+            if (enetCount == enetIdx)
+            {
+                return (void *)enets[arrayIdx];
+            }
+            enetCount++;
+        }
+    }
+
+    return NULL;
+}
+
 /**
  * Should be called by lwIP at the beginning of the program to set up the
  * FIRST available network interface.
@@ -893,7 +921,8 @@ err_t ethernetif0_init(struct netif *netif)
     return ethernetif_init(netif, &ethernetif_0, ethernetif_get_enet_qos_base(0U), cfg);
 }
 
-#if defined(FSL_FEATURE_SOC_ENET_QOS_COUNT) && (FSL_FEATURE_SOC_ENET_QOS_COUNT > 1)
+#if (defined(FSL_FEATURE_SOC_ENET_QOS_COUNT) && (FSL_FEATURE_SOC_ENET_QOS_COUNT > 1)) || \
+    (defined(FSL_FEATURE_SOC_EMAC_COUNT) && (FSL_FEATURE_SOC_EMAC_COUNT > 1))
 /**
  * Should be called by lwIP at the beginning of the program to set up the
  * SECOND available network interface.
@@ -935,4 +964,4 @@ err_t ethernetif1_init(struct netif *netif)
 
     return ethernetif_init(netif, &ethernetif_1, ethernetif_get_enet_qos_base(1U), cfg);
 }
-#endif /* FSL_FEATURE_SOC_ENET_QOS_COUNT */
+#endif /* FSL_FEATURE_SOC_ENET_QOS_COUNT / FSL_FEATURE_SOC_EMAC_COUNT */

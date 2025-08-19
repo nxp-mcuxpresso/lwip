@@ -32,7 +32,7 @@
 
 /*
  * Copyright (c) 2013-2016, Freescale Semiconductor, Inc.
- * Copyright 2016-2020,2022-2024 NXP
+ * Copyright 2016-2020,2022-2025 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -123,7 +123,7 @@ static netif_status_callback_fn ipv6_valid_state_user_cb;
  * Code
  ******************************************************************************/
 
-#if ETH_LINK_POLLING_INTERVAL_MS == 0 && NO_SYS == 0
+#if ETH_USE_GPIO_ADAPTER && ETH_LINK_POLLING_INTERVAL_MS == 0 && NO_SYS == 0
 static void phy_irq_synced_handler(void *arg)
 {
     struct netif *netif_ = (struct netif *)arg;
@@ -378,7 +378,7 @@ err_t ethernetif_init(struct netif *netif_,
     /* Start polling link state */
 #if ETH_LINK_POLLING_INTERVAL_MS > 0
     probe_link_cyclic(netif_);
-#elif NO_SYS == 0
+#elif ETH_USE_GPIO_ADAPTER && (NO_SYS == 0)
     if (ethernetifConfig->phyIntGpio != NULL)
     {
         hal_gpio_handle_t gpioHdl = ethernetif_get_int_gpio_hdl(netif_);

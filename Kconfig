@@ -109,7 +109,8 @@ if MCUX_COMPONENT_middleware.lwip
                        MCUX_COMPONENT_component.lpc_gpio_adapter || \
                        MCUX_COMPONENT_component.igpio_adapter || \
                        MCUX_COMPONENT_component.rgpio_adapter || \
-                       MCUX_COMPONENT_component.gpio_adapter
+                       MCUX_COMPONENT_component.gpio_adapter || \
+                       MCUX_COMPONENT_driver.siul2
             help
                 "Kinetis enet ethernet interface"
 
@@ -132,7 +133,8 @@ if MCUX_COMPONENT_middleware.lwip
                        MCUX_COMPONENT_component.lpc_gpio_adapter || \
                        MCUX_COMPONENT_component.igpio_adapter || \
                        MCUX_COMPONENT_component.rgpio_adapter || \
-                       MCUX_COMPONENT_component.gpio_adapter
+                       MCUX_COMPONENT_component.gpio_adapter || \
+                       MCUX_COMPONENT_driver.siul2
             help
                 "Enet ethernet interface"
 
@@ -155,7 +157,8 @@ if MCUX_COMPONENT_middleware.lwip
                        MCUX_COMPONENT_component.lpc_gpio_adapter || \
                        MCUX_COMPONENT_component.igpio_adapter || \
                        MCUX_COMPONENT_component.rgpio_adapter || \
-                       MCUX_COMPONENT_component.gpio_adapter
+                       MCUX_COMPONENT_component.gpio_adapter || \
+                       MCUX_COMPONENT_driver.siul2
             help
                 NETC ethernet interface
 
@@ -178,7 +181,8 @@ if MCUX_COMPONENT_middleware.lwip
                        MCUX_COMPONENT_component.lpc_gpio_adapter || \
                        MCUX_COMPONENT_component.igpio_adapter || \
                        MCUX_COMPONENT_component.rgpio_adapter || \
-                       MCUX_COMPONENT_component.gpio_adapter
+                       MCUX_COMPONENT_component.gpio_adapter || \
+                       MCUX_COMPONENT_driver.siul2
             help
                 "MCX ethernet interface"
 
@@ -1024,6 +1028,14 @@ if MCUX_COMPONENT_middleware.lwip
                         No prefix in generated macro
                         Priority of the receive task (platform dependent).
 
+                config ETH_USE_GPIO_ADAPTER
+                    bool "ETH_USE_GPIO_ADAPTER"
+                    default y if (MCUX_COMPONENT_component.rt_gpio_adapter || MCUX_COMPONENT_component.lpc_gpio_adapter || MCUX_COMPONENT_component.igpio_adapter || MCUX_COMPONENT_component.rgpio_adapter || MCUX_COMPONENT_component.gpio_adapter)
+                    depends on MCUX_COMPONENT_middleware.lwip.kinetis_ethernetif || MCUX_COMPONENT_middleware.lwip.enet_ethernetif || MCUX_COMPONENT_middleware.lwip.netc_ethernetif || MCUX_COMPONENT_middleware.lwip.mcx_ethernetif
+                    help
+                        No prefix in generated macro
+                        Use GPIO adapter.
+
                 config ENET_RXBUFF_SIZE
                     int "ENET_RXBUFF_SIZE"
                     default 1518
@@ -1078,6 +1090,15 @@ if MCUX_COMPONENT_middleware.lwip
                     help
                         No prefix in generated macro
                         Call BOARD_ENETFlexibleConfigure function.
+
+                config ETH_ENET_QOS_MII_MODE
+                    string "ETH_ENET_QOS_MII_MODE"
+                    default "kENET_QOS_RgmiiMode"
+                    depends on MCUX_COMPONENT_middleware.lwip.enet_ethernetif
+                    depends on MCUX_HAS_COMPONENT_driver.enet_qos
+                    help
+                        No prefix in generated macro
+                        ENET QoS peripheral MII mode.
 
                 config NETC_PORT_USE_INCLUDES
                     bool "NETC_PORT_USE_INCLUDES"

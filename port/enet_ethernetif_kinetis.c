@@ -188,7 +188,9 @@ struct ethernetif
     phy_duplex_t last_duplex;
     bool last_link_up;
 
+#if ETH_USE_GPIO_ADAPTER
     uint32_t intGpioHdl[((HAL_GPIO_HANDLE_SIZE + sizeof(uint32_t) - 1U) / sizeof(uint32_t))];
+#endif /* ETH_USE_GPIO_ADAPTER */
 };
 
 /*******************************************************************************
@@ -531,11 +533,13 @@ phy_handle_t *ethernetif_get_phy(struct netif *netif_)
     return eif->phyHandle;
 }
 
+#if ETH_USE_GPIO_ADAPTER
 hal_gpio_handle_t ethernetif_get_int_gpio_hdl(struct netif *netif_)
 {
     struct ethernetif *eif = netif_->state;
     return (hal_gpio_handle_t)eif->intGpioHdl;
 }
+#endif /* ETH_USE_GPIO_ADAPTER */
 
 phy_speed_t ethernetif_get_link_speed(struct netif *netif_)
 {
