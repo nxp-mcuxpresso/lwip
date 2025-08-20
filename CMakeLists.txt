@@ -511,6 +511,11 @@ if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.httpd.support)
             src/include/lwip/apps/httpd.h
             src/include/lwip/apps/httpd_opts.h
     )
+
+    mcux_add_source(
+        EXCLUDE TRUE
+        SOURCES src/apps/http/fsdata.c
+    )
 endif ()
 
 if (CONFIG_MCUX_COMPONENT_middleware.lwip.apps.httpd)
