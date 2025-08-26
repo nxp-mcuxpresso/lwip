@@ -32,7 +32,7 @@
 
 /*
  * Copyright (c) 2013-2016, Freescale Semiconductor, Inc.
- * Copyright 2016-2020,2022-2024 NXP
+ * Copyright 2016-2020,2022-2025 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -108,6 +108,12 @@ u32_t lwip_rand(void)
 }
 
 #if !NO_SYS
+
+void sys_arch_msleep(u32_t delay_ms)
+{
+    vTaskDelay(pdMS_TO_TICKS(delay_ms));
+}
+
 /*---------------------------------------------------------------------------*
  * Routine:  sys_mbox_new
  *---------------------------------------------------------------------------*

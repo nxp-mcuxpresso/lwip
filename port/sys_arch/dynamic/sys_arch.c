@@ -96,6 +96,12 @@ uint32_t lwip_rand(void)
 }
 
 #if !NO_SYS
+
+void sys_arch_msleep(u32_t delay_ms)
+{
+    vTaskDelay(pdMS_TO_TICKS(delay_ms));
+}
+
 /*---------------------------------------------------------------------------*
  * Routine:  sys_mbox_new
  *---------------------------------------------------------------------------*

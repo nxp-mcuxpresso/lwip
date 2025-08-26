@@ -12,6 +12,9 @@ To avoid ambiguity, change log below contains SHA-1 hashes of GIT commits used w
 KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 
 ## 2.2.1_rev7 (newest)
+### New features:
+- Operating system abstraction layer: the default implementation of the sys_msleep function (using a temporary
+  allocated semaphore) is overwritten by a new implementation in the adaptation layer (using vTaskDelay on FreeRTOS).
 ### Bug fixes:
 - ENET QoS adaptation layer: initialize the CSR (control and status register) clock field in the driver configuration.
   This fixes the bug with the number of clock ticks for one-microsecond reference timer being set incorrectly.

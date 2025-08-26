@@ -32,7 +32,7 @@
 
 /*
  * Copyright (c) 2013-2016, Freescale Semiconductor, Inc.
- * Copyright 2016-2017,2020,2022,2024 NXP
+ * Copyright 2016-2017,2020,2022,2024-2025 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -109,6 +109,9 @@ typedef struct _sys_mbox_t
 #define sys_mbox_valid_val(mbox)   ((mbox).xHandle != NULL)
 #define sys_mbox_valid(mbox)       (((mbox) != NULL) && sys_mbox_valid_val(*(mbox)))
 #define sys_mbox_set_invalid(mbox) ((mbox)->xHandle = NULL)
+
+void sys_arch_msleep(uint32_t delay_ms);
+#define sys_msleep(ms) sys_arch_msleep(ms)
 
 typedef struct _sys_thread_t
 {
