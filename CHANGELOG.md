@@ -11,7 +11,12 @@ To avoid ambiguity, change log below contains SHA-1 hashes of GIT commits used w
 
 KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 
-## 2.2.1_rev6 (newest)
+## 2.2.1_rev7 (newest)
+### Bug fixes:
+- ENET QoS adaptation layer: initialize the CSR (control and status register) clock field in the driver configuration.
+  This fixes the bug with the number of clock ticks for one-microsecond reference timer being set incorrectly.
+
+## 2.2.1_rev6
 ### New features:
 - Support for on-demand timers for some of the protocols. Reused from Espressif open source lwIP port.
   LwIP default protocol timer handlers are invoked periodically, even if there is nothing to do.

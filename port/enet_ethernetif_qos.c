@@ -482,6 +482,7 @@ void ethernetif_plat_init(struct netif *netif,
 
     ethernetif_phy_init(ethernetif, ethernetifConfig);
 
+    config.csrClock_Hz    = ethernetifConfig->srcClockHz;
     config.specialControl = kENET_QOS_HashMulticastEnable | kENET_QOS_StoreAndForward;
     config.rxBuffAlloc    = ethernetif_rx_alloc;
     config.rxBuffFree     = ethernetif_rx_free;
