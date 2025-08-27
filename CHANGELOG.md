@@ -18,6 +18,13 @@ KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 ### Bug fixes:
 - ENET QoS adaptation layer: initialize the CSR (control and status register) clock field in the driver configuration.
   This fixes the bug with the number of clock ticks for one-microsecond reference timer being set incorrectly.
+- Ethernet adaptation layers: Updated logic in ethernetif_pbuf_free_safe to allow the thread to sleep between
+  attempts to schedule pbuf_free on tcpip_thread. Previously, when ETH_RX_TASK_PRIO was higher than tcpip_thread
+  priority and scheduling failed due to resource constraints, ethernetif_pbuf_free_safe would loop indefinitely,
+  preventing tcpip_thread from freeing those resources. Changes include:
+  - Added thread sleep between scheduling attempts to prevent infinite loops
+  - Removed looping on schedule failure in interrupt context (now asserts instead)
+  - Added direct pbuf_free calls when LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT is enabled
 
 ## 2.2.1_rev6
 ### New features:
