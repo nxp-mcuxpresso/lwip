@@ -11,7 +11,28 @@ To avoid ambiguity, change log below contains SHA-1 hashes of GIT commits used w
 
 KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 
-## 2.2.1_rev7 (newest)
+## 2.2.1_rev8 (newest)
+### New features:
+- Applied patch #10465: Overall altcp_tls_mbedtls fixes and enhancements (https://savannah.nongnu.org/patch/?10465):
+  - Copy received TCP flags
+  - Free client's TLS config on dealloc
+  - Fix abort management. Fix to return ERR_ABRT on altcp_abort(). Add check to altcp_mbedtls_abort().
+  - Free SSL cache and session tickets on tls_free_config()
+  - Mark freed members to prevent double free.
+  - Correctly close and free LISTEN connections
+  - Use handshake steps rather than a single blocking call
+  - Add mbedtls return values.
+  - free rx_app on dealloc
+  - correct ALTCP_MBEDTLS_PLATFORM_ALLOC configuration
+  - Manage write apiflags
+  - Port to mbedtls v3
+  - Fix the return value of altcp_mbdtls_sndbuf when the underlying tcp sndbuf is consumed by ssl expansion bytes.
+- Switched from mbedTLS 2.x to mbedTLS 3.x:
+  - Updated Kconfig dependencies.
+  - Updated altcp_tls_mbedtls layer to use PSA crypto random number generator abstraction instead of ctr_drbg, which would be initialized twice.
+  - Updated NXP web server (src/apps/httpsrv).
+
+## 2.2.1_rev7
 ### New features:
 - Operating system abstraction layer: the default implementation of the sys_msleep function (using a temporary
   allocated semaphore) is overwritten by a new implementation in the adaptation layer (using vTaskDelay on FreeRTOS).

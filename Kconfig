@@ -65,7 +65,7 @@ if MCUX_COMPONENT_middleware.lwip
     if MCUX_COMPONENT_middleware.lwip.apps.httpsrv
         config MCUX_COMPONENT_middleware.lwip.apps.httpssrv
             bool "HTTPS Server"
-            select MCUX_COMPONENT_middleware.mbedtls
+            select MCUX_COMPONENT_middleware.mbedtls3x
     endif
 
     config MCUX_COMPONENT_middleware.lwip.apps.mqtt
@@ -5820,7 +5820,7 @@ if MCUX_COMPONENT_middleware.lwip
                         default n
                         depends on MCUX_COMPONENT_middleware.lwip.apps.httpsrv
                         depends on MCUX_COMPONENT_middleware.lwip.apps.httpssrv
-                        depends on MCUX_COMPONENT_middleware.mbedtls
+                        depends on MCUX_COMPONENT_middleware.mbedtls3x
                         help
                             No prefix in generated macro
                             type unsigned

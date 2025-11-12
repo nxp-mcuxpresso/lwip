@@ -133,6 +133,7 @@ struct altcp_tls_config {
 #endif
 };
 
+#if MBEDTLS_VERSION_MAJOR < 3
 /** Entropy and random generator are shared by all mbedTLS configuration */
 struct altcp_tls_entropy_rng {
   mbedtls_entropy_context entropy;
@@ -140,6 +141,7 @@ struct altcp_tls_entropy_rng {
   int ref;
 };
 static struct altcp_tls_entropy_rng *altcp_tls_entropy_rng;
+#endif
 
 static err_t altcp_mbedtls_lower_recv(void *arg, struct altcp_pcb *inner_conn, struct pbuf *p, err_t err);
 static err_t altcp_mbedtls_setup(void *conf, struct altcp_pcb *conn, struct altcp_pcb *inner_conn);
@@ -768,6 +770,7 @@ altcp_mbedtls_debug(void *ctx, int level, const char *file, int line, const char
 }
 #endif
 
+#if MBEDTLS_VERSION_MAJOR < 3
 static err_t
 altcp_mbedtls_ref_entropy(void)
 {
@@ -817,6 +820,22 @@ altcp_mbedtls_unref_entropy(void)
       altcp_tls_entropy_rng->ref--;
   }
 }
+#else
+static int psa_random_generator(void *p_rng, unsigned char *output, size_t len)
+{
+  psa_status_t status;
+
+  /* Ensure PSA crypto is initialized */
+  static int psa_initialized = 0;
+  if (!psa_initialized) {
+    psa_crypto_init();
+    psa_initialized = 1;
+  }
+
+  status = psa_generate_random(output, len);
+  return (status == PSA_SUCCESS) ? 0 : -1;
+}
+#endif
 
 /** Create new TLS configuration
  * ATTENTION: Server certificate and private key have to be added outside this function!
@@ -868,23 +887,31 @@ altcp_tls_create_config(int is_server, u8_t cert_count, u8_t pkey_count, int hav
 
   mbedtls_ssl_config_init(&conf->conf);
 
+#if MBEDTLS_VERSION_MAJOR < 3
   if (altcp_mbedtls_ref_entropy() != ERR_OK) {
     altcp_mbedtls_free_config(conf);
     return NULL;
   }
+#endif
 
   /* Setup ssl context (@todo: what's different for a client here? -> might better be done on listen/connect) */
   ret = mbedtls_ssl_config_defaults(&conf->conf, is_server ? MBEDTLS_SSL_IS_SERVER : MBEDTLS_SSL_IS_CLIENT,
                                     MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
   if (ret != 0) {
     LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_ssl_config_defaults failed: %d\n", ret));
+#if MBEDTLS_VERSION_MAJOR < 3
     altcp_mbedtls_unref_entropy();
+#endif
     altcp_mbedtls_free_config(conf);
     return NULL;
   }
   mbedtls_ssl_conf_authmode(&conf->conf, ALTCP_MBEDTLS_AUTHMODE);
 
+#if MBEDTLS_VERSION_MAJOR < 3
   mbedtls_ssl_conf_rng(&conf->conf, mbedtls_ctr_drbg_random, &altcp_tls_entropy_rng->ctr_drbg);
+#else
+  mbedtls_ssl_conf_rng(&conf->conf, psa_random_generator, NULL);
+#endif
 #if ALTCP_MBEDTLS_LIB_DEBUG != LWIP_DBG_OFF
   mbedtls_ssl_conf_dbg(&conf->conf, altcp_mbedtls_debug, stdout);
 #endif
@@ -897,11 +924,17 @@ altcp_tls_create_config(int is_server, u8_t cert_count, u8_t pkey_count, int hav
 #if defined(MBEDTLS_SSL_SESSION_TICKETS) && ALTCP_MBEDTLS_USE_SESSION_TICKETS
   mbedtls_ssl_ticket_init(&conf->ticket_ctx);
 
+#if MBEDTLS_VERSION_MAJOR < 3
   ret = mbedtls_ssl_ticket_setup(&conf->ticket_ctx, mbedtls_ctr_drbg_random, &altcp_tls_entropy_rng->ctr_drbg,
+#else
+  ret = mbedtls_ssl_ticket_setup(&conf->ticket_ctx, psa_random_generator, NULL,
+#endif
     ALTCP_MBEDTLS_SESSION_TICKET_CIPHER, ALTCP_MBEDTLS_SESSION_TICKET_TIMEOUT_SECONDS);
   if (ret) {
     LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_ssl_ticket_setup failed: %d\n", ret));
+#if MBEDTLS_VERSION_MAJOR < 3
     altcp_mbedtls_unref_entropy();
+#endif
     altcp_mbedtls_free_config(conf);
     return NULL;
   }
@@ -956,7 +989,7 @@ err_t altcp_tls_config_server_add_privkey_cert(struct altcp_tls_config *config,
 
   ret = mbedtls_pk_parse_key(pkey, (const unsigned char *) privkey, privkey_len, privkey_pass, privkey_pass_len
 #if MBEDTLS_VERSION_MAJOR >= 3
-                            , mbedtls_ctr_drbg_random, &altcp_tls_entropy_rng->ctr_drbg
+                            , psa_random_generator, NULL
 #endif
   );
   if (ret != 0) {
@@ -1063,7 +1096,7 @@ altcp_tls_create_config_client_2wayauth(const u8_t *ca, size_t ca_len, const u8_
   mbedtls_pk_init(conf->pkey);
   ret = mbedtls_pk_parse_key(conf->pkey, privkey, privkey_len, privkey_pass, privkey_pass_len
 #if MBEDTLS_VERSION_MAJOR >= 3
-                            , mbedtls_ctr_drbg_random, &altcp_tls_entropy_rng->ctr_drbg
+                            , psa_random_generator, NULL
 #endif
 );
   if (ret != 0) {
@@ -1114,7 +1147,9 @@ altcp_tls_free_config(struct altcp_tls_config *conf)
   }
   mbedtls_ssl_config_free(&conf->conf);
   altcp_mbedtls_free_config(conf);
+#if MBEDTLS_VERSION_MAJOR < 3
   altcp_mbedtls_unref_entropy();
+#endif
 #if defined(MBEDTLS_SSL_CACHE_C) && ALTCP_MBEDTLS_USE_SESSION_CACHE
   mbedtls_ssl_cache_free(&conf->cache);
 #endif
@@ -1126,6 +1161,7 @@ altcp_tls_free_config(struct altcp_tls_config *conf)
 void
 altcp_tls_free_entropy(void)
 {
+#if MBEDTLS_VERSION_MAJOR < 3
   LWIP_ASSERT_CORE_LOCKED();
 
   if (altcp_tls_entropy_rng && altcp_tls_entropy_rng->ref == 0) {
@@ -1134,6 +1170,7 @@ altcp_tls_free_entropy(void)
     altcp_mbedtls_free_config(altcp_tls_entropy_rng);
     altcp_tls_entropy_rng = NULL;
   }
+#endif
 }
 
 /* "virtual" functions */
