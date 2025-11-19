@@ -31,6 +31,13 @@ KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
   - Updated Kconfig dependencies.
   - Updated altcp_tls_mbedtls layer to use PSA crypto random number generator abstraction instead of ctr_drbg, which would be initialized twice.
   - Updated NXP web server (src/apps/httpsrv).
+### Bug fixes:
+- Fixed sys_sem_new in FreeRTOS porting layer:
+  - If the initial count argument was 1, the newly created semaphore was not signalled from the start.
+  - The initial count should be just 0 or 1 according to lwIP documentation, but the implementation allowed
+    it to be more than 1 (counting semaphore). Fixed to allow only binary semaphore behavior.
+  - `src/apps/httpsrv` updated to use FreeRTOS API directly where it cannot use sys_sem_t as a counting
+    semaphore anymore.
 
 ## 2.2.1_rev7
 ### New features:
