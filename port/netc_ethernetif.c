@@ -461,7 +461,7 @@ void msgintrCallback(MSGINTR_Type *base, uint8_t channel, uint32_t pendingIntr)
     if ((pendingIntr & (1U << TX_INTR_MSG_DATA)) != 0U)
     {
 #if USE_RTOS && defined(SDK_OS_FREE_RTOS)
-#ifdef __CA7_REV
+#if defined(__CA7_REV) || defined(__ARM_ARCH_8A)
         if (SystemGetIRQNestingLevel())
 #else
         if (__get_IPSR())
@@ -755,7 +755,9 @@ void ethernetif_plat_init(struct netif *netif,
     ethernetif->transmitAccessEvent = xEventGroupCreate();
     xEventGroupSetBits(ethernetif->transmitAccessEvent, ethernetif->txFlag);
 
+#ifndef __GIC_PRESENT
     NVIC_SetPriority(NETC_MSGINTR_IRQ, NETC_MSGINTR_PRIORITY);
+#endif
 #endif
 
     ethernetif->ep_config->cmdBdrConfig.bdBase   = ethernetif->cmdBuffDescrip;
