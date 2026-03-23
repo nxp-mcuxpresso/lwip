@@ -11,7 +11,9 @@ To avoid ambiguity, change log below contains SHA-1 hashes of GIT commits used w
 
 KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 
-## 2.2.1_rev8 (newest)
+## 2.2.1_rev9 (newest)
+
+## 2.2.1_rev8
 ### New features:
 - Applied patch #10465: Overall altcp_tls_mbedtls fixes and enhancements (https://savannah.nongnu.org/patch/?10465):
   - Copy received TCP flags
