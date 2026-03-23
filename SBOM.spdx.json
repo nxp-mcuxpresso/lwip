@@ -2,27 +2,27 @@
   "SPDXID": "SPDXRef-DOCUMENT",
   "spdxVersion": "SPDX-2.3",
   "creationInfo": {
-    "created": "2025-06-09T06:32:34Z",
+    "created": "2026-03-17T05:26:29Z",
     "creators": [
       "Organization: NXP"
     ],
-    "licenseListVersion": "3.20"
+    "licenseListVersion": "3.26"
   },
-  "name": "lwip-v25.06.00",
+  "name": "lwip-v26.03.00",
   "dataLicense": "CC0-1.0",
   "hasExtractedLicensingInfos": [
     {
+      "name": "Public Domain",
       "licenseId": "LicenseRef-d26bcb7d-5bc8-4f05-8942-a3a42728a2e4",
-      "extractedText": "Public domain code is not subject to any license.",
-      "name": "Public Domain"
+      "extractedText": "Public domain code is not subject to any license."
     }
   ],
-  "documentNamespace": "https://nxp.com/spdx/7825321f-eb27-4ec2-8629-de2d879d00f3",
+  "documentNamespace": "https://nxp.com/spdx/0ebbc5d2-af0f-43eb-b40a-b7824564631a",
   "packages": [
     {
-      "SPDXID": "SPDXRef-package-7825321f-eb27-4ec2-8629-de2d879d00f3",
+      "SPDXID": "SPDXRef-package-0ebbc5d2-af0f-43eb-b40a-b7824564631a",
       "name": "lwip",
-      "versionInfo": "v25.06.00",
+      "versionInfo": "v26.03.00",
       "licenseConcluded": "(BSD-3-Clause)",
       "licenseDeclared": "(BSD-3-Clause)",
       "downloadLocation": "https://github.com/nxp-mcuxpresso/lwip",
@@ -32,45 +32,59 @@
       "filesAnalyzed": false
     },
     {
-      "SPDXID": "SPDXRef-package-87476701-cd7b-494c-a778-27bd8fecc90f",
+      "SPDXID": "SPDXRef-package-0ebbc5d2-af0f-43eb-b40a-b7824564631a---87476701-cd7b-494c-a778-27bd8fecc90f",
       "name": "lwIP",
       "versionInfo": "2.2.1",
       "licenseConcluded": "BSD-3-Clause",
       "licenseDeclared": "BSD-3-Clause",
       "homepage": "http://savannah.nongnu.org/projects/lwip/",
-      "downloadLocation": "http://ports.ubuntu.com/ubuntu-ports/ubuntu-ports/pool/universe/l/lwip",
-      "externalRefs": [],
-      "filesAnalyzed": false,
-      "supplier": "NOASSERTION"
+      "downloadLocation": "NOASSERTION",
+      "originator": "Organization: ubuntu",
+      "supplier": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "d4ea2838-d1dc-4ef7-a727-3266ffc3ca0b",
+          "referenceType": "BlackDuck-ComponentOrigin"
+        },
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/ubuntu/lwip@2.2.1%2Bdfsg1-4",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false
     },
     {
-      "SPDXID": "SPDXRef-package-b10579af-35fd-4242-accb-d2fe7debce6e",
+      "SPDXID": "SPDXRef-package-0ebbc5d2-af0f-43eb-b40a-b7824564631a---b10579af-35fd-4242-accb-d2fe7debce6e",
       "name": "SHA-1 in C",
       "versionInfo": "1",
       "licenseConcluded": "LicenseRef-d26bcb7d-5bc8-4f05-8942-a3a42728a2e4",
       "licenseDeclared": "LicenseRef-d26bcb7d-5bc8-4f05-8942-a3a42728a2e4",
       "homepage": "http://www.mirrors.wiretapped.net/security/cryptography/hashes/sha1",
       "downloadLocation": "NOASSERTION",
+      "originator": "Organization: SHA-1 in C",
+      "supplier": "NOASSERTION",
       "externalRefs": [],
-      "filesAnalyzed": false,
-      "supplier": "NOASSERTION"
+      "filesAnalyzed": false
     }
   ],
   "relationships": [
     {
       "spdxElementId": "SPDXRef-DOCUMENT",
       "relationshipType": "DESCRIBES",
-      "relatedSpdxElement": "SPDXRef-package-7825321f-eb27-4ec2-8629-de2d879d00f3"
+      "relatedSpdxElement": "SPDXRef-package-0ebbc5d2-af0f-43eb-b40a-b7824564631a"
     },
     {
-      "spdxElementId": "SPDXRef-package-7825321f-eb27-4ec2-8629-de2d879d00f3",
-      "relationshipType": "CONTAINS",
-      "relatedSpdxElement": "SPDXRef-package-b10579af-35fd-4242-accb-d2fe7debce6e"
+      "spdxElementId": "SPDXRef-package-0ebbc5d2-af0f-43eb-b40a-b7824564631a",
+      "relationshipType": "OTHER",
+      "relatedSpdxElement": "SPDXRef-package-0ebbc5d2-af0f-43eb-b40a-b7824564631a---87476701-cd7b-494c-a778-27bd8fecc90f",
+      "comment": "Separate Work"
     },
     {
-      "spdxElementId": "SPDXRef-package-7825321f-eb27-4ec2-8629-de2d879d00f3",
+      "spdxElementId": "SPDXRef-package-0ebbc5d2-af0f-43eb-b40a-b7824564631a",
       "relationshipType": "CONTAINS",
-      "relatedSpdxElement": "SPDXRef-package-87476701-cd7b-494c-a778-27bd8fecc90f"
+      "relatedSpdxElement": "SPDXRef-package-0ebbc5d2-af0f-43eb-b40a-b7824564631a---b10579af-35fd-4242-accb-d2fe7debce6e"
     }
   ]
 }
