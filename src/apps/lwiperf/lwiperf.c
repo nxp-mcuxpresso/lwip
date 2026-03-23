@@ -19,7 +19,7 @@
 
 /*
  * Copyright (c) 2014 Simon Goldschmidt
- * Copyright 2019-2025 NXP
+ * Copyright 2019-2026 NXP
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -85,6 +85,11 @@
 #ifndef LWIPERF_ALLOC
 #define LWIPERF_ALLOC(type)         mem_malloc(sizeof(type))
 #define LWIPERF_FREE(type, item)    mem_free(item)
+#endif
+
+/** Place constant transmit buffer data into quick access memory or not */
+#ifndef LWIPERF_QUICKACCESS_TX_BUFFER
+#define LWIPERF_QUICKACCESS_TX_BUFFER 1
 #endif
 
 #define BLOCK_SIZE (1024 * 128)
@@ -227,7 +232,11 @@ typedef struct _lwiperf_state_tcp {
 static lwiperf_state_base_t *lwiperf_all_connections;
 
 /** A const buffer to send from: we want to measure sending, not copying! */
+#if LWIPERF_QUICKACCESS_TX_BUFFER
 AT_QUICKACCESS_SECTION_DATA_ALIGN(static const u8_t lwiperf_txbuf_const[1600], 32) = {
+#else
+static const u8_t lwiperf_txbuf_const[1600] = {
+#endif
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',

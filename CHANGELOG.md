@@ -12,6 +12,9 @@ To avoid ambiguity, change log below contains SHA-1 hashes of GIT commits used w
 KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 
 ## 2.2.1_rev9 (newest)
+### New features:
+- The feature "Iperf now tries to place buffers into fast memory" (introduced in 2.2.1_rev5) can be
+  disabled by defining LWIPERF_QUICKACCESS_TX_BUFFER to 0.
 
 ## 2.2.1_rev8
 ### New features:
