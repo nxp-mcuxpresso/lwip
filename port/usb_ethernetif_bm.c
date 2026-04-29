@@ -1,5 +1,5 @@
 /**
- * Copyright 2018,2020,2022,2024-2025 NXP
+ * Copyright 2018,2020,2022,2024-2026 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -14,7 +14,7 @@
 #include "netif/etharp.h"
 #include "usb_ethernetif.h"
 
-#if USE_RTOS && defined(SDK_OS_FREE_RTOS)
+#if (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS))
 #include "FreeRTOS.h"
 #include "event_groups.h"
 #endif

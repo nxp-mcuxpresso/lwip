@@ -32,7 +32,7 @@
 
 /*
  * Copyright (c) 2013-2016, Freescale Semiconductor, Inc.
- * Copyright 2016-2025 NXP
+ * Copyright 2016-2026 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -52,7 +52,7 @@
 #include "netif/etharp.h"
 #include "netif/ppp/pppoe.h"
 
-#if USE_RTOS && defined(SDK_OS_FREE_RTOS)
+#if (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS))
 #include "FreeRTOS.h"
 #include "event_groups.h"
 #endif
@@ -300,7 +300,7 @@ struct ethernetif
 #else
     netc_msix_entry_t msixEntry[2];
 #endif
-#if USE_RTOS && defined(SDK_OS_FREE_RTOS)
+#if (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS))
     EventGroupHandle_t transmitAccessEvent;
     EventBits_t txFlag;
 #endif
@@ -460,7 +460,7 @@ void msgintrCallback(MSGINTR_Type *base, uint8_t channel, uint32_t pendingIntr)
     /* Transmit interrupt */
     if ((pendingIntr & (1U << TX_INTR_MSG_DATA)) != 0U)
     {
-#if USE_RTOS && defined(SDK_OS_FREE_RTOS)
+#if (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS))
 #ifdef __CA7_REV
         if (SystemGetIRQNestingLevel())
 #else
@@ -491,7 +491,7 @@ void msgintrCallback(MSGINTR_Type *base, uint8_t channel, uint32_t pendingIntr)
     if ((pendingIntr & (1U << RX_INTR_MSG_DATA)) != 0U)
     {
         EP_CleanRxIntrFlags(ethernetif->ep_handle, 1);
-#if USE_RTOS && defined(SDK_OS_FREE_RTOS)
+#if (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS))
         ethernetif_input(ethernetif->netif);
 #endif
     }
@@ -750,7 +750,7 @@ void ethernetif_plat_init(struct netif *netif,
     uint8_t mac_addr[6];
     memcpy(mac_addr, &ethernetifConfig->macAddress, sizeof(mac_addr));
 
-#if USE_RTOS && defined(SDK_OS_FREE_RTOS)
+#if (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS))
     ethernetif->txFlag              = 1;
     ethernetif->transmitAccessEvent = xEventGroupCreate();
     xEventGroupSetBits(ethernetif->transmitAccessEvent, ethernetif->txFlag);
@@ -1043,7 +1043,7 @@ err_t ethernetif_linkoutput(struct netif *netif, struct pbuf *p)
     else
     {
         result = ERR_OK;
-#if USE_RTOS && defined(SDK_OS_FREE_RTOS)
+#if (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS))
         xEventGroupWaitBits(ethernetif->transmitAccessEvent, ethernetif->txFlag, pdTRUE, (BaseType_t) false,
                             portMAX_DELAY);
 #else

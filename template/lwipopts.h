@@ -4,7 +4,7 @@
  * This file is based on \src\include\lwip\opt.h
  ******************************************************************************
  * Copyright (c) 2013-2016, Freescale Semiconductor, Inc.
- * Copyright 2016-2018, 2022-2024 NXP
+ * Copyright 2016-2018, 2022-2024, 2026 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -23,7 +23,7 @@
 #endif /* SDK_OS_FREE_RTOS */
 #endif /* USE_RTOS */
 
-#if USE_RTOS
+#if (defined(USE_RTOS) && (USE_RTOS > 0U))
 
 /**
  * SYS_LIGHTWEIGHT_PROT==1: if you want inter-task protection for certain

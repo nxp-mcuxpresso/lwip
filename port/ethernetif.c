@@ -32,7 +32,7 @@
 
 /*
  * Copyright (c) 2013-2016, Freescale Semiconductor, Inc.
- * Copyright 2016-2020,2022-2025 NXP
+ * Copyright 2016-2020,2022-2026 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -55,7 +55,7 @@
 #include "lwip/netif.h"
 #include "lwip/sys.h"
 
-#if USE_RTOS && defined(SDK_OS_FREE_RTOS)
+#if (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS))
 #include "FreeRTOS.h"
 #include "event_groups.h"
 #include "portmacro.h"
@@ -688,7 +688,7 @@ err_enum_t ethernetif_wait_ipv4_valid(struct netif *netif_, long timeout_ms)
 
     return ERR_OK;
 
-#endif /* USE_RTOS && defined(SDK_OS_FREE_RTOS) && (LWIP_NETIF_EXT_STATUS_CALLBACK == 1) */
+#endif /* (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS)) && (LWIP_NETIF_EXT_STATUS_CALLBACK == 1) */
 }
 #endif /* LWIP_DHCP == 1 */
 

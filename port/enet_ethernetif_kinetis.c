@@ -32,7 +32,7 @@
 
 /*
  * Copyright (c) 2013-2016, Freescale Semiconductor, Inc.
- * Copyright 2016-2025 NXP
+ * Copyright 2016-2026 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -51,7 +51,7 @@
 #include "netif/etharp.h"
 #include "netif/ppp/pppoe.h"
 
-#if USE_RTOS && defined(SDK_OS_FREE_RTOS)
+#if (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS))
 #include "FreeRTOS.h"
 #include "event_groups.h"
 #endif
@@ -171,10 +171,11 @@ typedef struct rx_pbuf_wrapper
 struct ethernetif
 {
     ENET_Type *base;
-#if (defined(FSL_FEATURE_SOC_ENET_COUNT) && (FSL_FEATURE_SOC_ENET_COUNT > 0)) || (USE_RTOS && defined(SDK_OS_FREE_RTOS))
+#if (defined(FSL_FEATURE_SOC_ENET_COUNT) && (FSL_FEATURE_SOC_ENET_COUNT > 0)) || \
+    (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS))
     enet_handle_t handle;
 #endif
-#if USE_RTOS && defined(SDK_OS_FREE_RTOS)
+#if (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS))
     EventGroupHandle_t enetTransmitAccessEvent;
     EventBits_t txFlag;
 #endif
@@ -203,7 +204,7 @@ void *ethernetif_get_enet_base(const uint8_t enetIdx);
 /*******************************************************************************
  * Code
  ******************************************************************************/
-#if USE_RTOS && defined(SDK_OS_FREE_RTOS)
+#if (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS))
 static void ethernet_callback(ENET_Type *base,
                               enet_handle_t *handle,
 #if FSL_FEATURE_ENET_QUEUE > 1
@@ -447,7 +448,7 @@ void ethernetif_plat_init(struct netif *netif,
     BOARD_ENETFlexibleConfigure(&config);
 #endif
 
-#if USE_RTOS && defined(SDK_OS_FREE_RTOS)
+#if (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS))
     uint32_t instance;
     static ENET_Type *const enetBases[]  = ENET_BASE_PTRS;
     static const IRQn_Type enetTxIrqId[] = ENET_Transmit_IRQS;
@@ -587,7 +588,7 @@ static unsigned char *enet_get_tx_buffer(struct ethernetif *ethernetif)
  */
 static err_t enet_send_frame(struct ethernetif *ethernetif, unsigned char *data, const uint32_t length)
 {
-#if USE_RTOS && defined(SDK_OS_FREE_RTOS)
+#if (defined(USE_RTOS) && (USE_RTOS > 0U) && defined(SDK_OS_FREE_RTOS))
     {
         status_t result;
 
