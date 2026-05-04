@@ -291,6 +291,8 @@ static void lwiperf_udp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 static err_t lwiperf_udp_tx_start(lwiperf_state_udp_t *conn);
 
 /** Get time roughly derived from lwIP's sys_now(), ms resolution clock */
+#if (!defined(LWIP_TIMEVAL_PRIVATE)) || (LWIP_TIMEVAL_PRIVATE != 0)
+/** Added for compatibility */
 static int
 clock_gettime(int clk_id, struct timespec *tp)
 {
@@ -302,6 +304,7 @@ clock_gettime(int clk_id, struct timespec *tp)
 
   return 0;
 }
+#endif
 
 static inline void
 diff_ts(const struct timespec *start, const struct timespec *stop, struct timespec *result)
