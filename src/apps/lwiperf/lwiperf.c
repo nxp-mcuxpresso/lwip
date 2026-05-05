@@ -94,7 +94,7 @@
 
 #define BLOCK_SIZE (1024 * 128)
 
-/** The IDs of clocks used by clock_gettime() */
+/** The IDs of clocks used by lwiperf_clock_gettime() */
 #define CLOCK_MONOTONIC 1
 
 /** The resolution of the clock in microseconds */
@@ -291,10 +291,8 @@ static void lwiperf_udp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 static err_t lwiperf_udp_tx_start(lwiperf_state_udp_t *conn);
 
 /** Get time roughly derived from lwIP's sys_now(), ms resolution clock */
-#if (!defined(LWIP_TIMEVAL_PRIVATE)) || (LWIP_TIMEVAL_PRIVATE != 0)
-/** Added for compatibility */
 static int
-clock_gettime(int clk_id, struct timespec *tp)
+lwiperf_clock_gettime(int clk_id, struct timespec *tp)
 {
   u32_t now = sys_now();
   LWIP_UNUSED_ARG(clk_id);
@@ -304,7 +302,6 @@ clock_gettime(int clk_id, struct timespec *tp)
 
   return 0;
 }
-#endif
 
 static inline void
 diff_ts(const struct timespec *start, const struct timespec *stop, struct timespec *result)
@@ -1240,7 +1237,7 @@ lwiperf_udp_client_send_more(lwiperf_state_udp_t *conn)
     return;
   }
   /* check time/bw */
-  clock_gettime(CLOCK_MONOTONIC, &ts);
+  lwiperf_clock_gettime(CLOCK_MONOTONIC, &ts);
   diff_ts(&conn->udp_lastpkt, &ts, &dt);
   if ((uint32_t)((dt.tv_sec * 1000000) + (dt.tv_nsec / 1000)) < conn->delay_target)
     return;
@@ -1509,7 +1506,7 @@ lwiperf_udp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p,
   else if (datagramID >= 0) {
     struct timespec ts, dt;
     uint32_t transit;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
+    lwiperf_clock_gettime(CLOCK_MONOTONIC, &ts);
     if (!conn || !conn->have_settings_buf) {
       /* allocate struct for a new client */
       if (!conn) {

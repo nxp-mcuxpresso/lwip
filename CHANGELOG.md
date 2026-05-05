@@ -15,7 +15,7 @@ KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 ### Bug fixes:
 - Checking the value of USE_RTOS macro in porting layer, not only if the macro is defined.
 ### New features:
-- Support macro is added for clock_gettime() definition to avoid conflict with system libs in compilation.
+- The function clock_gettime() renamed to lwiperf_clock_gettime() to avoid conflict with system libs in compilation.
 
 ## 2.2.1_rev9
 ### New features:
