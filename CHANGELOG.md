@@ -13,6 +13,28 @@ KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 
 ## 2.2.1_rev11 (newest)
 ### Bug fixes:
+- altcp_tls (mbedTLS): Fixed three related defects in
+  `altcp_mbedtls_handle_rx_appldata()` that affected reception of large TLS
+  records.
+  - Permanent TCP receive window stall when a single TLS record is larger
+    than the inner TCP receive window (`TCP_WND`) and therefore spans more
+    than one TCP segment: on `MBEDTLS_ERR_SSL_WANT_READ` the handler now
+    pre-acknowledges the encrypted bytes already consumed by `bio_recv`,
+    so the inner TCP window reopens and the remaining segments of the
+    record can arrive.
+  - `LWIP_ASSERT("bogus byte counts", ...)` could fire on the
+    record-completion path once the pre-ack above was in effect, because
+    `bio_bytes_read` is no longer guaranteed to be greater than
+    `bio_bytes_appl`; the assertion was replaced with a guarded
+    subtraction that only acks the residual TLS overhead when
+    `bio_bytes_read > bio_bytes_appl`.
+  - Truncated/deferred application data when the decrypted plaintext of a
+    single record exceeded `PBUF_POOL_BUFSIZE` (typically with default
+    `MBEDTLS_SSL_IN_CONTENT_LEN` of 16 KB): the receive loop now keeps
+    decrypting while `mbedtls_ssl_read()` returns plaintext, instead of
+    exiting as soon as `state->rx`/`state->rx_app` are empty. The loop is
+    bounded by mbedTLS's internal record buffer and the availability of
+    encrypted input on `state->rx`.
 - altcp_tls (mbedTLS): Removed per-connection auto-free of the client
   `altcp_tls_config` in `altcp_mbedtls_dealloc()`. The TLS config lifetime is
   owned by the application, which calls `altcp_tls_free_config()` once no

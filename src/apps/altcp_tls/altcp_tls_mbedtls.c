@@ -451,6 +451,29 @@ altcp_mbedtls_handle_rx_appldata(struct altcp_pcb *conn, altcp_mbedtls_state_t *
         return ERR_OK;
       } else {
         pbuf_free(buf);
+        /* MBEDTLS_ERR_SSL_WANT_READ: mbedTLS has only part of a TLS record and
+           needs more encrypted bytes to decrypt it. Two facts matter here:
+             (a) Every prior mbedtls_ssl_read() in this do/while iteration
+                 fed encrypted data through bio_recv(), which consumes from
+                 state->rx and accumulates the consumed byte count in
+                 state->bio_bytes_read. So state->bio_bytes_read can be > 0
+                 even though the record is not yet complete.
+             (b) The inner TCP flow-control window only reopens via
+                 tcp_recved(), and the normal record-completion path below
+                 is the only place that calls altcp_mbedtls_lower_recved().
+                 If the record straddles multiple TCP segments and exceeds
+                 the receive window, the next segment never arrives, the
+                 record never completes, and the inner TCP window stalls
+                 permanently (denial-of-service on the connection).
+           Pre-acknowledge the encrypted bytes consumed so far to keep the
+           window open. The handshake path uses the same pattern. The
+           record-completion path below subtracts what was already acked, so
+           there is no double-count; tcp_recved() additionally clamps to
+           TCP_WND, which bounds any residual over-acknowledgement. */
+        if (state->bio_bytes_read) {
+          altcp_mbedtls_lower_recved(conn->inner_conn, state->bio_bytes_read);
+          state->bio_bytes_read = 0;
+        }
         return ERR_OK;
       }
       pbuf_free(buf);
@@ -467,11 +490,22 @@ altcp_mbedtls_handle_rx_appldata(struct altcp_pcb *conn, altcp_mbedtls_state_t *
         if (mbedtls_ssl_get_bytes_avail(&state->ssl_context) == 0) {
           /* Record is done, now we know the share between application and protocol bytes
              and can adjust the RX window by the protocol bytes.
-             The rest is 'recved' by the application calling our 'recved' fn. */
-          int overhead_bytes;
-          LWIP_ASSERT("bogus byte counts", state->bio_bytes_read > state->bio_bytes_appl);
-          overhead_bytes = state->bio_bytes_read - state->bio_bytes_appl;
-          altcp_mbedtls_lower_recved(conn->inner_conn, overhead_bytes);
+             The rest is 'recved' by the application calling our 'recved' fn.
+             Without the WANT_READ pre-ack above the invariant
+             bio_bytes_read > bio_bytes_appl always held here, because
+             bio_bytes_read counted the full encrypted record (plaintext +
+             TLS overhead) and bio_bytes_appl counted only the plaintext
+             produced for this record. With the pre-ack, part (or all) of
+             bio_bytes_read may already have been credited to tcp_recved()
+             on previous WANT_READ iterations, so bio_bytes_read can now be
+             smaller than (or equal to) bio_bytes_appl. Guarding the
+             subtraction prevents acking a negative value and replaces the
+             previous LWIP_ASSERT("bogus byte counts", ...) that no longer
+             holds. */
+          if (state->bio_bytes_read > state->bio_bytes_appl) {
+            int overhead_bytes = state->bio_bytes_read - state->bio_bytes_appl;
+            altcp_mbedtls_lower_recved(conn->inner_conn, overhead_bytes);
+          }
           state->bio_bytes_read = 0;
           state->bio_bytes_appl = 0;
         }
@@ -495,7 +529,21 @@ altcp_mbedtls_handle_rx_appldata(struct altcp_pcb *conn, altcp_mbedtls_state_t *
         return ERR_OK;
       }
     }
-  } while (ret > 0 && (state->rx != NULL || state->rx_app != NULL));
+    /* Loop while mbedtls_ssl_read() actually produced plaintext (ret > 0).
+       state->rx and state->rx_app can both be empty while mbedTLS still
+       holds buffered plaintext from a single TLS record whose decoded
+       payload exceeded PBUF_POOL_BUFSIZE (e.g. an HTTPS response chunk
+       close to MBEDTLS_SSL_IN_CONTENT_LEN ~= 16 KB); checking those
+       pointers here would truncate the response and defer the rest until
+       the next inbound segment or poll callback.
+       Termination: mbedtls_ssl_read() returns positive only when it pops
+       bytes from its bounded internal record buffer
+       (MBEDTLS_SSL_IN_CONTENT_LEN), and additional encrypted input is
+       only available while state->rx is non-NULL (bio_recv returns
+       MBEDTLS_ERR_SSL_WANT_READ otherwise, exiting via the branch above).
+       The loop therefore cannot iterate beyond the bounded plaintext
+       backlog plus what state->rx can supply. */
+  } while (ret > 0);
   return ERR_OK;
 }
 
