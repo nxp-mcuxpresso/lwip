@@ -9,7 +9,7 @@
 
 /*
  * Copyright (c) 2017 Simon Goldschmidt
- * Copyright 2025 NXP
+ * Copyright 2025-2026 NXP
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -1466,11 +1466,12 @@ altcp_mbedtls_dealloc(struct altcp_pcb *conn)
         pbuf_free(state->rx_app);
         state->rx_app = NULL;
       }
-      /* Only free if it's a client connection. Server connections share the same altcp_tls_config*/
-      struct altcp_tls_config *conf = (struct altcp_tls_config *) state->conf;
-      if (!conf->is_server) {
-        altcp_tls_free_config(conf);
-      }
+      /* The altcp_tls_config lifetime is owned by the application, not by the
+         per-connection state. The application must call altcp_tls_free_config()
+         exactly once when no remaining connections reference the config.
+         Freeing the config here caused a use-after-free / double-free when an
+         application shared a single client config across multiple connections
+         and then called altcp_tls_free_config() on shutdown. */
       altcp_mbedtls_free(state->conf, state);
       conn->state = NULL;
     }

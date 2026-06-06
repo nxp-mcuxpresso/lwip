@@ -12,6 +12,13 @@ To avoid ambiguity, change log below contains SHA-1 hashes of GIT commits used w
 KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 
 ## 2.2.1_rev11 (newest)
+### Bug fixes:
+- altcp_tls (mbedTLS): Removed per-connection auto-free of the client
+  `altcp_tls_config` in `altcp_mbedtls_dealloc()`. The TLS config lifetime is
+  owned by the application, which calls `altcp_tls_free_config()` once no
+  remaining connections reference it. The previous behavior caused a
+  use-after-free / double-free when a single client config was shared across
+  multiple connections.
 
 ## 2.2.1_rev10
 ### Bug fixes:
