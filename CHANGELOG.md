@@ -11,7 +11,9 @@ To avoid ambiguity, change log below contains SHA-1 hashes of GIT commits used w
 
 KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 
-## 2.2.1_rev10 (newest)
+## 2.2.1_rev11 (newest)
+
+## 2.2.1_rev10
 ### Bug fixes:
 - Checking the value of USE_RTOS macro in porting layer, not only if the macro is defined.
 ### New features:
