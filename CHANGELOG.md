@@ -11,7 +11,12 @@ To avoid ambiguity, change log below contains SHA-1 hashes of GIT commits used w
 
 KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 
-## 2.2.1_rev11 (newest)
+## 2.2.1_rev12 (newest)
+### Bug fixes:
+- Fixed uninitialized chg_report_tmr in mld6_get_or_alloc_data,
+  this could cause the MLDv6 report to be sent after a long time.
+
+## 2.2.1_rev11
 ### Bug fixes:
 - altcp_tls (mbedTLS): Fixed three related defects in
   `altcp_mbedtls_handle_rx_appldata()` that affected reception of large TLS
