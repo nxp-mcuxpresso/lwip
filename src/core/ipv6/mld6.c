@@ -16,7 +16,7 @@
 
 /*
  * Copyright (c) 2010 Inico Technologies Ltd.
- * Copyright 2017, 2023, 2025 NXP
+ * Copyright 2017, 2023, 2025, 2026 NXP
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -126,7 +126,7 @@ mld_data *mld6_get_or_alloc_data(struct netif *netif) {
       data->groups = NULL;
       data->groups_to_report = NULL;
       data->general_report_tmr = 0;
-      data->general_report_tmr = 0;
+      data->chg_report_tmr = 0;
       data->max_response_delay = MLD6_DEFAULT_MRD;
       data->robustness = MLD6_DEFAULT_ROBUSTNESS;
     }
