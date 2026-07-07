@@ -85,11 +85,11 @@ static void USB_HostCdcRndisDataOutCallback(void *param, uint8_t *data, uint32_t
 usb_host_handle g_HostHandle = {0};
 
 #if defined(USB_HOST_CONFIG_CDC_ECM) && USB_HOST_CONFIG_CDC_ECM
-USB_HostCdcEcmInstance_t g_HostCdcEcmInstance                                                     = {0};
-USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t g_OutPutBuffer[CDC_ECM_DATA_BUFFER_LEN]   = {0};
-USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t g_InPutBuffer[CDC_ECM_DATA_BUFFER_LEN]    = {0};
-USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t g_NotifyBuffer[CDC_ECM_NOTIFY_BUFFER_LEN] = {0};
-uint8_t g_requestParamBuffer[CDC_ECM_REQUEST_BUFFER_LEN]                                          = {0};
+USB_HostCdcEcmInstance_t g_HostCdcEcmInstance = {0};
+USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t g_OutPutBuffer[CDC_ECM_DATA_BUFFER_LEN];
+USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t g_InPutBuffer[CDC_ECM_DATA_BUFFER_LEN];
+USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t g_NotifyBuffer[CDC_ECM_NOTIFY_BUFFER_LEN];
+uint8_t g_requestParamBuffer[CDC_ECM_REQUEST_BUFFER_LEN] = {0};
 USB_HostCdcEcmRequestParam_t *g_requestParam =
     (USB_HostCdcEcmRequestParam_t *)(&g_HostCdcEcmInstance.requestParamBuffer);
 static struct pbuf *s_pbufReceived = NULL;
@@ -1294,15 +1294,15 @@ static void USB_HostApplicationInit(uint8_t controllerId, struct netif *netif)
         usb_echo("Create USB_HostApplicationTask error.\r\n");
     }
 #elif defined(USB_HOST_CONFIG_CDC_RNDIS) && USB_HOST_CONFIG_CDC_RNDIS
-    netif->state                          = (void *)&g_RndisInstance;
-    g_RndisInstance.netif                 = (void *)netif;
-    g_RndisInstance.hostHandle            = g_HostHandle;
-    g_RndisInstance.sendMessage           = &g_SendMessage[0];
-    g_RndisInstance.getMessage            = &g_GetMessage[0];
-    g_RndisInstance.outPutBuffer          = &g_OutPutBuffer[0];
-    g_RndisInstance.inPutBuffer           = &g_InPutBuffer[0];
-    g_RndisInstance.event_group           = xEventGroupCreate();
-    g_RndisInstance.lwipoutput            = xEventGroupCreate();
+    netif->state                 = (void *)&g_RndisInstance;
+    g_RndisInstance.netif        = (void *)netif;
+    g_RndisInstance.hostHandle   = g_HostHandle;
+    g_RndisInstance.sendMessage  = &g_SendMessage[0];
+    g_RndisInstance.getMessage   = &g_GetMessage[0];
+    g_RndisInstance.outPutBuffer = &g_OutPutBuffer[0];
+    g_RndisInstance.inPutBuffer  = &g_InPutBuffer[0];
+    g_RndisInstance.event_group  = xEventGroupCreate();
+    g_RndisInstance.lwipoutput   = xEventGroupCreate();
 
     if (xTaskCreate(USB_HostTask, "usb host task", 2000L / sizeof(portSTACK_TYPE), g_HostHandle,
                     DEFAULT_THREAD_PRIO + 3, NULL) != pdPASS)
@@ -1401,8 +1401,8 @@ err_t USB_EthernetIfIgmpMacFilter(struct netif *netif, const ip4_addr_t *group, 
     static uint32_t usedFilters           = 0;
     static uint8_t multicastFilters[CDC_ECM_MAX_SUPPORT_MULTICAST_FILTERS][NETIF_MAX_HWADDR_LEN];
     uint8_t filter[CDC_ECM_MAX_SUPPORT_MULTICAST_FILTERS][NETIF_MAX_HWADDR_LEN];
-    uint16_t filterLen  = 0;
-    int filterFind = 0;
+    uint16_t filterLen = 0;
+    int filterFind     = 0;
     uint8_t mac[NETIF_MAX_HWADDR_LEN];
     _multicastIp2MulticastMac(group, &mac);
 #endif
@@ -1602,7 +1602,8 @@ err_t USB_EthernetIfOutPut(struct netif *netif, struct pbuf *p)
 
             if (CDC_ECM_DATA_BUFFER_LEN < p->tot_len)
             {
-                usb_echo("USB sending buffer is insuffient. Ethernet frame length: %d, USB buffer length: %d\r\n", p->tot_len, CDC_ECM_DATA_BUFFER_LEN);
+                usb_echo("USB sending buffer is insuffient. Ethernet frame length: %d, USB buffer length: %d\r\n",
+                         p->tot_len, CDC_ECM_DATA_BUFFER_LEN);
                 return ERR_BUF;
             }
 
@@ -1668,13 +1669,13 @@ err_t USB_EthernetIfOutPut(struct netif *netif, struct pbuf *p)
         {
             if (p->tot_len < RNDIS_FRAME_MAX_FRAMELEN)
             {
-                uint8_t *buf = &((rndis_packet_msg_struct_t *)rndisInstance->outPutBuffer)->dataBuffer[0];
+                uint8_t *buf  = &((rndis_packet_msg_struct_t *)rndisInstance->outPutBuffer)->dataBuffer[0];
                 u16_t uCopied = pbuf_copy_partial(p, buf, p->tot_len, 0);
                 LWIP_ASSERT("uCopied != p->tot_len", uCopied == p->tot_len);
 
                 USB_HostRndisSendDataMsg(rndisInstance->classHandle, rndisInstance->outPutBuffer,
-                                         RNDIS_FRAME_MAX_FRAMELEN, 0, 0, 0, 0, 0, buf,
-                                         p->tot_len, USB_HostCdcRndisDataOutCallback, rndisInstance);
+                                         RNDIS_FRAME_MAX_FRAMELEN, 0, 0, 0, 0, 0, buf, p->tot_len,
+                                         USB_HostCdcRndisDataOutCallback, rndisInstance);
                 xEventGroupWaitBits(g_RndisInstance.lwipoutput, RNDIS_LWIP_OUTPUT, pdTRUE, pdFALSE, portMAX_DELAY);
             }
             else
