@@ -816,9 +816,9 @@ err_t ethernetif_linkoutput(struct netif *netif, struct pbuf *p)
     pbuf_header(p, -ETH_PAD_SIZE); /* drop the padding word */
 #endif
 
-    if (p->len > sizeof(tx_buffer_t))
+    if (p->tot_len > sizeof(tx_buffer_t))
     {
-        /* ENET_QOS_SendFrame takes single buffer */
+        /* ENET_QOS_SendFrame takes single buffer; check total chained length */
         result = ERR_BUF;
     }
     else
