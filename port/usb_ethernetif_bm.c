@@ -184,16 +184,24 @@ static void USB_HostCdcEcmDataInCallback(void *param, uint8_t *data, uint32_t da
     {
         if (!s_pbufReceived)
         {
-            s_pbufReceived = pbuf_alloc(PBUF_RAW, dataLength, PBUF_POOL);
+            s_pbufReceived = pbuf_alloc(PBUF_RAW, (u16_t)dataLength, PBUF_POOL);
             if (s_pbufReceived)
             {
-                s_pbufReceived->tot_len = dataLength;
-                s_pbufReceived->len     = dataLength;
-
-                /* in special case, when polling out packet, in packet maybe finihsed, the in packet will be not
-                 * be handled */
-                memcpy(s_pbufReceived->payload, data, dataLength);
-                ecmInstance->netifUsbStateEvent |= CDC_ECM_STATE_LINK_RX;
+                /* PBUF_POOL hands back a chain of pool buffers whenever the frame does not fit in a
+                 * single one, which happens as soon as PBUF_POOL_BUFSIZE is configured below
+                 * CDC_ECM_DATA_BUFFER_LEN. Copying the whole frame into s_pbufReceived->payload would
+                 * then run past the first chunk, so copy through pbuf_take(), which walks the chain,
+                 * and leave pbuf_alloc()'s own tot_len/len bookkeeping alone instead of overwriting
+                 * the first chunk's length with the full frame length. */
+                if (pbuf_take(s_pbufReceived, data, (u16_t)dataLength) == ERR_OK)
+                {
+                    ecmInstance->netifUsbStateEvent |= CDC_ECM_STATE_LINK_RX;
+                }
+                else
+                {
+                    pbuf_free(s_pbufReceived);
+                    s_pbufReceived = NULL;
+                }
             }
         }
         else
@@ -709,16 +717,26 @@ static void USB_HostCdcRndisDataInCallback(void *param, uint8_t *data, uint32_t 
                 if (pbuf)
                 {
                     temp->dataBuffer[temp->dataLength] = 0;
-                    pbuf->tot_len                      = (u16_t)temp->dataLength;
-                    pbuf->len                          = (u16_t)temp->dataLength;
 
                     uint8_t *p = (uint8_t *)(&temp->dataOffset);
-                    memcpy(pbuf->payload, (p + temp->dataOffset), temp->dataLength);
-                    /*in special case, when polling out packet, in packet maybe
-                     * finihsed, the in packet will be not be handled*/
-                    if (!rndisInstance->pollingInSending)
+                    /* PBUF_POOL hands back a chain of pool buffers whenever the frame does not fit in
+                     * a single one, and RNDIS_FRAME_MAX_FRAMELEN exceeds the default
+                     * PBUF_POOL_BUFSIZE. Copying the whole frame into pbuf->payload would therefore
+                     * run past the first chunk, so copy through pbuf_take(), which walks the chain,
+                     * and leave pbuf_alloc()'s own tot_len/len bookkeeping alone instead of
+                     * overwriting the first chunk's length with the full frame length. */
+                    if (pbuf_take(pbuf, (p + temp->dataOffset), (u16_t)temp->dataLength) == ERR_OK)
                     {
-                        netif->input(pbuf, netif);
+                        /*in special case, when polling out packet, in packet maybe
+                         * finihsed, the in packet will be not be handled*/
+                        if (!rndisInstance->pollingInSending)
+                        {
+                            netif->input(pbuf, netif);
+                        }
+                    }
+                    else
+                    {
+                        pbuf_free(pbuf);
                     }
                 }
             }
