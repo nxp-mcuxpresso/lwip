@@ -891,6 +891,7 @@ static void USB_HostCdcRndisControlCallback(void *param, uint8_t *data, uint32_t
             rndisInstance->runState = kUSB_HostCdcRndisRunWaitGetMACAddress;
 
             rndis_query_cmplt_struct_t *msg = (rndis_query_cmplt_struct_t *)data;
+            uint16_t queriedMtu             = 0U;
             /* The response header fields come from the device; validate them against the bytes
              * actually received before using informationBufferOffset as a pointer offset.
              * informationBufferOffset is relative to requestID (8 bytes into the message) and
@@ -902,15 +903,17 @@ static void USB_HostCdcRndisControlCallback(void *param, uint8_t *data, uint32_t
                 (msg->informationBufferLength >= sizeof(uint16_t)) &&
                 (msg->informationBufferOffset <= (msg->messageLength - 8U - sizeof(uint16_t))))
             {
-                netif->mtu =
+                queriedMtu =
                     USB_SHORT_FROM_LITTLE_ENDIAN_ADDRESS(((uint8_t *)&msg->requestID + msg->informationBufferOffset));
             }
-            else
+            /* The read above is bounds-checked, but the value read is still chosen by the device.
+             * Accept it only inside the range the RNDIS data path can carry, otherwise fall back to
+             * the default - as when the device does not send a query complete message at all. */
+            if ((queriedMtu < RNDIS_MIN_MTU) || (queriedMtu > RNDIS_MAX_MTU))
             {
-                /*set default value if device doesn't send query complete
-                 * message*/
-                netif->mtu = 1500U;
+                queriedMtu = RNDIS_DEFAULT_MTU;
             }
+            netif->mtu = queriedMtu;
         }
         else if (rndisInstance->previousRunState == kUSB_HostCdcRndisRunWaitGetMACAddressDone)
         {

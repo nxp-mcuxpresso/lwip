@@ -61,6 +61,14 @@
 #define RNDIS_CONTROL_MESSAGE    (1024)
 #define RNDIS_RESPONSE_AVAILABLE (8)
 
+#define RNDIS_ETHERNET_HEADER_LEN (14U)
+#define RNDIS_DEFAULT_MTU         (1500U)
+/*! Range accepted for the device-reported maximum frame size before it becomes the netif mtu. The
+ * upper bound is what the RNDIS data path can actually carry; the lower bound is the 68-byte
+ * minimum IPv4 datagram every interface must be able to carry (RFC 791). */
+#define RNDIS_MIN_MTU             (68U)
+#define RNDIS_MAX_MTU             (RNDIS_FRAME_MAX_FRAMELEN - RNDIS_ETHERNET_HEADER_LEN)
+
 #define RNDIS_LWIP_OUTPUT       (0x01)
 #define RNDIS_DEVICE_ATTACH     (0x02)
 #define RNDIS_CONTROL_MSG       (0x04)
