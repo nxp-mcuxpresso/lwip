@@ -1,5 +1,5 @@
 /**
- * Copyright 2018,2022,2024 NXP
+ * Copyright 2018,2022,2024, 2026 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -37,6 +37,12 @@
 #define CDC_ECM_POWER_MANAGEMENT_PATTERN_FILTER_LEN (74U)
 #define CDC_ECM_REQUEST_BUFFER_LEN                  (32U)
 #define CDC_ECM_MAX_SUPPORT_MULTICAST_FILTERS       (2U)
+#define CDC_ECM_ETHERNET_HEADER_LEN                 (14U)
+/*! Smallest wMaxSegmentSize accepted from a device: an Ethernet header plus the 68-byte minimum
+ * IPv4 datagram every interface must be able to carry (RFC 791). A device-reported value below
+ * CDC_ECM_ETHERNET_HEADER_LEN makes the netif mtu calculation underflow, and a value of zero also
+ * stalls the transmit loop because it never advances. */
+#define CDC_ECM_MIN_SEGMENT_SIZE                    (CDC_ECM_ETHERNET_HEADER_LEN + 68U)
 
 #define CDC_ECM_STATE_DEVICE_ATTACH     (1U << 0)
 #define CDC_ECM_STATE_DEVICE_DETACH     (1U << 1)

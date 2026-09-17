@@ -428,7 +428,23 @@ void USB_HostCdcEcmTask(void *param, uint32_t *task_event)
                 ecmInstance->deviceEthernetStatisticsBitmap =
                     *((uint32_t *)ethernetNetworkingDesc->bmEthernetStatistics);
                 ecmInstance->deviceMaxSegmentSize = *((uint16_t *)ethernetNetworkingDesc->wMaxSegmentSize);
-                ecmInstance->deviceMCFilters      = *((uint16_t *)ethernetNetworkingDesc->wNumberMCFilters) & 0x7FFFU;
+                /* wMaxSegmentSize comes from the device; clamp it to the range the transmit path can
+                 * actually handle before it is used as the mtu and as the transfer chunk size below.
+                 * A value below CDC_ECM_ETHERNET_HEADER_LEN would underflow the mtu calculation, and a
+                 * value of zero would stall the transmit loop (buflen 0, total never decreases). */
+                if (ecmInstance->deviceMaxSegmentSize < CDC_ECM_MIN_SEGMENT_SIZE)
+                {
+                    ecmInstance->deviceMaxSegmentSize = CDC_ECM_MIN_SEGMENT_SIZE;
+                }
+                else if (ecmInstance->deviceMaxSegmentSize > CDC_ECM_FRAME_MAX_FRAMELEN)
+                {
+                    ecmInstance->deviceMaxSegmentSize = CDC_ECM_FRAME_MAX_FRAMELEN;
+                }
+                else
+                {
+                    /* value already within range */
+                }
+                ecmInstance->deviceMCFilters = *((uint16_t *)ethernetNetworkingDesc->wNumberMCFilters) & 0x7FFFU;
                 ecmInstance->devicePerfectMCFiltersSupport =
                     (*((uint16_t *)ethernetNetworkingDesc->wNumberMCFilters) & 0x8000U) >> 15;
                 ecmInstance->devicePowerFilters = ethernetNetworkingDesc->bNumberPowerFilters;
@@ -471,11 +487,13 @@ void USB_HostCdcEcmTask(void *param, uint32_t *task_event)
                        NETIF_MAX_HWADDR_LEN);
                 if (ecmInstance->deviceMaxSegmentSize > CDC_ECM_FRAME_MAX_FRAMELEN)
                 {
-                    ((struct netif *)(ecmInstance->netif))->mtu = CDC_ECM_FRAME_MAX_FRAMELEN - 14;
+                    ((struct netif *)(ecmInstance->netif))->mtu =
+                        CDC_ECM_FRAME_MAX_FRAMELEN - CDC_ECM_ETHERNET_HEADER_LEN;
                 }
                 else
                 {
-                    ((struct netif *)(ecmInstance->netif))->mtu = (u16_t)(ecmInstance->deviceMaxSegmentSize - 14);
+                    ((struct netif *)(ecmInstance->netif))->mtu =
+                        (u16_t)(ecmInstance->deviceMaxSegmentSize - CDC_ECM_ETHERNET_HEADER_LEN);
                 }
             }
             break;
