@@ -952,8 +952,12 @@ static void USB_HostCdcRndisControlCallback(void *param, uint8_t *data, uint32_t
             netif->hwaddr_len = NETIF_MAX_HWADDR_LEN;
 
             /* Validate the device-supplied response header the same way as the MTU query above
-             * before copying from informationBufferOffset; skip the copy rather than reading from
-             * an unvalidated offset, leaving the address for the caller to handle. */
+             * before copying from informationBufferOffset. Skipping just the copy is not enough
+             * here: nothing initialises netif->hwaddr, so continuing the bring-up would leave it
+             * holding whatever the caller's netif already contained - zeroes on a first attach, and
+             * the MAC of the device attached before it on a re-attach - and this host would then put
+             * those bytes in the source address of every frame it sends to the peer. Stop the
+             * bring-up instead of running the interface with an address the device never sent. */
             if ((NULL != data) && (dataLength >= sizeof(rndis_query_cmplt_struct_t)) &&
                 (REMOTE_NDIS_QUERY_CMPLT == msg->messageType) && (msg->messageLength <= dataLength) &&
                 (msg->messageLength >= (8U + NETIF_MAX_HWADDR_LEN)) &&
@@ -962,6 +966,13 @@ static void USB_HostCdcRndisControlCallback(void *param, uint8_t *data, uint32_t
             {
                 memcpy(netif->hwaddr, (((uint8_t *)&msg->requestID + msg->informationBufferOffset)),
                        NETIF_MAX_HWADDR_LEN);
+            }
+            else
+            {
+                usb_echo("RNDIS MAC address query complete message is not valid\r\n");
+                rndisInstance->runState         = kUSB_HostCdcRndisRunIdle;
+                rndisInstance->previousRunState = kUSB_HostCdcRndisRunIdle;
+                return;
             }
         }
         else if (rndisInstance->previousRunState == kUSB_HostCdcRndisRunWaitSetMsgDone)
