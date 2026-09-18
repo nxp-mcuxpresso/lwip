@@ -68,7 +68,7 @@ static void USB_HostCdcEcmControlIgmpFilterCallback(void *param,
                                                     usb_status_t status);
 static int _char_atoi16(const char *ch);
 static usb_status_t USB_HostCdcEcmUnicodeStrToNum(const uint16_t *strBuf, uint32_t strlength, uint8_t *const numBuf);
-static void USB_HostCdcEcmUnicodeMacAddressStrToNum(const uint16_t *strBuf, uint8_t *const macBuf);
+static usb_status_t USB_HostCdcEcmUnicodeMacAddressStrToNum(const uint16_t *strBuf, uint8_t *const macBuf);
 #elif defined(USB_HOST_CONFIG_CDC_RNDIS) && USB_HOST_CONFIG_CDC_RNDIS
 static void USB_HostCdcRndisControlCallback(void *param, uint8_t *data, uint32_t dataLength, usb_status_t status);
 static void USB_HostCdcRndisInterruptCallback(void *param, uint8_t *data, uint32_t dataLength, usb_status_t status);
@@ -461,12 +461,33 @@ void USB_HostCdcEcmTask(void *param, uint32_t *task_event)
                 ecmInstance->runPrevState = ecmInstance->runCurState;
                 ecmInstance->runCurState  = USB_HostCdcEcmRunIdle;
                 uint16_t macStringDescLength = ((usb_descriptor_common_t *)(&macStringDescBuffer[0]))->bLength;
-                /* bLength comes from the device; clamp it so the second request cannot write past
-                 * the fixed-size macStringDescBuffer. */
-                if (macStringDescLength > CDC_ECM_STRING_MAC_BUFFER_LEN)
+                /* bLength comes from the device, and it decides how many bytes the second request
+                 * below writes into the fixed-size macStringDescBuffer.
+                 *
+                 * A short value is the dangerous one: CDC-ECM 1.2 section 5.4 requires the
+                 * iMACAddress string to be exactly 12 hex characters, which is what
+                 * CDC_ECM_STRING_MAC_BUFFER_LEN covers, and
+                 * USB_HostCdcEcmUnicodeMacAddressStrToNum() unconditionally reads all 24 string bytes
+                 * at macStringDescBuffer[2]. Fetching fewer than that leaves the rest of this static
+                 * buffer holding the string of whichever device was attached before, and that residue
+                 * would become the interface hwaddr this host puts in the source address of every
+                 * frame it sends. The hex-digit check in
+                 * USB_HostCdcEcmUnicodeMacAddressStrToNum() does not catch it, because residue left
+                 * by a previously attached device is itself valid hex. So reject anything shorter.
+                 *
+                 * An oversized value needs no more than the clamp it always had: requesting only
+                 * CDC_ECM_STRING_MAC_BUFFER_LEN bytes still fills the whole buffer, so no residue is
+                 * left behind and the first 12 characters are parsed. Keep tolerating that rather
+                 * than refusing a device over a descriptor that is merely longer than the spec
+                 * allows. */
+                if (macStringDescLength < CDC_ECM_STRING_MAC_BUFFER_LEN)
                 {
-                    macStringDescLength = CDC_ECM_STRING_MAC_BUFFER_LEN;
+                    usb_echo("MAC address string (index %d) descriptor length %d is less than %d.\r\n",
+                             ethernetNetworkingDesc->iMACAddress, macStringDescLength,
+                             CDC_ECM_STRING_MAC_BUFFER_LEN);
+                    break;
                 }
+                macStringDescLength = CDC_ECM_STRING_MAC_BUFFER_LEN;
                 if (USB_HostCdcEcmGetMacStringDescriptor(
                         ecmInstance->classHandle, ethernetNetworkingDesc->iMACAddress, 0x0409U, &macStringDescBuffer[0],
                         macStringDescLength,
@@ -481,8 +502,14 @@ void USB_HostCdcEcmTask(void *param, uint32_t *task_event)
                 ecmInstance->runPrevState               = ecmInstance->runCurState;
                 ecmInstance->runCurState                = USB_HostCdcEcmRunSetupTraffic;
                 g_requestParam->SetEthernetPacketFilter = ecmInstance->devicePktFilerBitmap;
-                USB_HostCdcEcmUnicodeMacAddressStrToNum((uint16_t *)(&macStringDescBuffer[2]),
-                                                        ecmInstance->deviceMacAddress);
+                if (USB_HostCdcEcmUnicodeMacAddressStrToNum((uint16_t *)(&macStringDescBuffer[2]),
+                                                            ecmInstance->deviceMacAddress) != kStatus_USB_Success)
+                {
+                    usb_echo("MAC address string (index %d) descriptor is not 12 hex digits.\r\n",
+                             ethernetNetworkingDesc->iMACAddress);
+                    ecmInstance->runCurState = USB_HostCdcEcmRunIdle;
+                    break;
+                }
                 memcpy(((struct netif *)(ecmInstance->netif))->hwaddr, ecmInstance->deviceMacAddress,
                        NETIF_MAX_HWADDR_LEN);
                 if (ecmInstance->deviceMaxSegmentSize > CDC_ECM_FRAME_MAX_FRAMELEN)
@@ -678,17 +705,23 @@ static usb_status_t USB_HostCdcEcmUnicodeStrToNum(const uint16_t *strBuf, uint32
     return status;
 }
 
-static void USB_HostCdcEcmUnicodeMacAddressStrToNum(const uint16_t *strBuf, uint8_t *const macBuf)
+static usb_status_t USB_HostCdcEcmUnicodeMacAddressStrToNum(const uint16_t *strBuf, uint8_t *const macBuf)
 {
     uint32_t maclength  = 6U;
     uint8_t macByte[12] = {0};
-    USB_HostCdcEcmUnicodeStrToNum(strBuf, maclength * 2, macByte);
+    /* USB_HostCdcEcmUnicodeStrToNum() leaves a position it could not decode at whatever macByte
+     * already held, so ignoring its result would turn a device string that is not 12 hex digits
+     * into a silently fabricated address. Report the failure and leave macBuf untouched. */
+    if (USB_HostCdcEcmUnicodeStrToNum(strBuf, maclength * 2, macByte) != kStatus_USB_Success)
+    {
+        return kStatus_USB_Error;
+    }
     for (uint32_t index = 0U; index < maclength; index++)
     {
         macBuf[index] = (uint8_t)(macByte[index * 2] << 4) | (macByte[index * 2 + 1]);
     }
 
-    return;
+    return kStatus_USB_Success;
 }
 #elif defined(USB_HOST_CONFIG_CDC_RNDIS) && USB_HOST_CONFIG_CDC_RNDIS
 /*!
