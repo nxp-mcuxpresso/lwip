@@ -57,6 +57,24 @@ behaviour of an app. Increasing improves Rx throughput.
 
 Setting it to value < 1 or not defining means "no limit".
 
+## Using the payload checksum computed by the MAC
+The ENET MAC sums the IP payload of every frame it receives and reports the sum in the enhanced receive buffer
+descriptor. With `ETH_USE_RX_PAYLOAD_CHECKSUM` set to 1 the port records that sum for each received frame and
+`ethernetif_rx_payload_chksum()` hands it to lwIP when lwIP asks for the checksum of exactly that range, instead of
+reading the payload again. lwIP still adds the pseudo header and does the comparison itself, so all
+`CHECKSUM_CHECK_*` options keep their meaning. This is meant for configurations that must verify checksums in
+software, for example because `IP_REASSEMBLY` is enabled: the MAC cannot verify fragmented datagrams but it sums
+each fragment, and lwIP sums a reassembled datagram one fragment at a time.
+
+Requirements:
+- Only the ENET port (`enet_ethernetif_kinetis.c`) supports it.
+- `ENET_ENHANCEDBUFFERDESCRIPTOR_MODE` must be defined.
+- `LWIP_CHKSUM` must be set to `ethernetif_rx_payload_chksum`, and `LWIP_CHKSUM_ALGORITHM` must still select a
+  software algorithm. The Kconfig template `lwipopts.h` does both when the option is set.
+
+Only frames with an Ethernet header followed by an IPv4 header without options are handled; the checksum of
+anything else is computed in software as usual.
+
 ## Helper functions
 If your application needs to wait for the link to become up you can use one of
 the following functions:

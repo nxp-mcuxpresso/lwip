@@ -42,3 +42,14 @@
     "IP_FRAG is enabled and hardware cannot generate ICMP, ICMPv6, UDP and TCP checksums inside fragmented IP packets. " \
     "Please enable software generation of ICMP, ICMPv6, UDP and TCP checksums or disable IP_FRAG."
 #endif
+
+#if ETH_USE_RX_PAYLOAD_CHECKSUM && !defined(ENET_ENHANCEDBUFFERDESCRIPTOR_MODE)
+#error \
+    "ETH_USE_RX_PAYLOAD_CHECKSUM needs the enhanced buffer descriptors: define ENET_ENHANCEDBUFFERDESCRIPTOR_MODE."
+#endif
+
+#if ETH_USE_RX_PAYLOAD_CHECKSUM && !defined(ENET_BUFFDESCRIPTOR_RX_BDU_MASK)
+#error \
+    "ETH_USE_RX_PAYLOAD_CHECKSUM needs an ENET driver that reports payloadChecksum, ipFlags and bduDone " \
+    "in enet_rx_frame_attribute_t."
+#endif

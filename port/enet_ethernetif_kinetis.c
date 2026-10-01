@@ -42,6 +42,8 @@
 #include "lwip/def.h"
 #include "lwip/ethip6.h"
 #include "lwip/igmp.h"
+#include "lwip/ip4.h"
+#include "lwip/prot/ip.h"
 #include "lwip/mem.h"
 #include "lwip/mld6.h"
 #include "lwip/pbuf.h"
@@ -163,6 +165,12 @@ typedef struct rx_pbuf_wrapper
     void *buffer;              /*!< Original buffer wrapped by p. */
     volatile bool buffer_used; /*!< Wrapped buffer is used by ENET or lwIP. */
     struct netif *netif;       /*!< Network interface context data. */
+#if ETH_USE_RX_PAYLOAD_CHECKSUM
+    const u8_t *chksumPayload; /*!< IP payload of the frame in the buffer, see ethernetif_rx_payload_chksum(). */
+    u16_t chksumPayloadLen;    /*!< Length of the IP payload. */
+    u16_t chksumSum;           /*!< Sum of the IP payload computed by the MAC, in host byte order. */
+    volatile bool chksumValid; /*!< chksumSum can be used. Set by the RX handler, cleared when used or freed. */
+#endif
 } rx_pbuf_wrapper_t;
 
 /**
@@ -340,6 +348,133 @@ err_t ethernetif_mld_mac_filter(struct netif *netif, const ip6_addr_t *group, en
 }
 #endif
 
+#if ETH_USE_RX_PAYLOAD_CHECKSUM
+/*
+ * Sum of the received IP payload computed by the MAC.
+ *
+ * For every received frame the MAC sums the IP payload and reports it in the enhanced RX buffer descriptor.
+ * ethernetif_rx_payload_chksum(), used as LWIP_CHKSUM, returns that sum when lwIP asks for the checksum of
+ * exactly that range, instead of reading the payload again. lwIP still adds the pseudo header and compares,
+ * so a wrong sum can only make the checksum fail. Any other range is summed by lwip_standard_chksum().
+ *
+ * What the MAC reports:
+ *  - IP fragments and ICMP: the sum of the IP payload.
+ *  - Whole TCP and UDP frames: the sum also includes the pseudo header, because the MAC verifies these itself.
+ *    The pseudo header is subtracted here.
+ *  - Frames flagged with a bad IP header, or with less than 3 bytes of IP payload: no valid sum.
+ */
+static ENET_Type *const s_enetBasePtrs[] = ENET_BASE_PTRS;
+
+static struct ethernetif *s_rxChksumInstances[ARRAY_SIZE(s_enetBasePtrs)];
+
+/* Folds a 32 bit accumulator into a 16 bit one's complement sum. */
+static u16_t ethernetif_fold_sum(u32_t sum)
+{
+    sum = (sum >> 16) + (sum & 0xFFFFU);
+    sum = (sum >> 16) + (sum & 0xFFFFU);
+    return (u16_t)sum;
+}
+
+static void ethernetif_rx_payload_chksum_add_instance(struct ethernetif *ethernetif)
+{
+    size_t i;
+
+    for (i = 0; i < ARRAY_SIZE(s_rxChksumInstances); i++)
+    {
+        if (s_rxChksumInstances[i] == NULL)
+        {
+            s_rxChksumInstances[i] = ethernetif;
+            return;
+        }
+    }
+}
+
+/* Records the sum reported by the MAC for a frame received in the buffer wrapped by wrapper. */
+static void ethernetif_rx_payload_chksum_store(rx_pbuf_wrapper_t *wrapper, const enet_rx_frame_struct_t *rxFrame)
+{
+    const u8_t *frame = (const u8_t *)wrapper->buffer;
+    const struct eth_hdr *ethhdr = (const struct eth_hdr *)frame;
+    const struct ip_hdr *iphdr   = (const struct ip_hdr *)(frame + SIZEOF_ETH_HDR);
+    u16_t ipLen;
+    u32_t sum;
+
+    wrapper->chksumValid = false;
+
+    /* Only Ethernet + IPv4 without options: that is where the payload starts at a fixed offset. */
+    if ((ethhdr->type != PP_HTONS(ETHTYPE_IP)) || (IPH_V(iphdr) != 4) || (IPH_HL(iphdr) != (IP_HLEN / 4)))
+    {
+        return;
+    }
+    /* The MAC does not provide a sum if it has not finished the descriptor or found the frame invalid. */
+    if (!rxFrame->rxAttribute.bduDone ||
+        (0U != (rxFrame->rxAttribute.ipFlags & ENET_BUFFDESCRIPTOR_RX_IPHEADCHECKSUM_MASK)))
+    {
+        return;
+    }
+    /* The IP total length, not the frame length, tells what was summed: the frame may carry padding. */
+    ipLen = lwip_ntohs(IPH_LEN(iphdr));
+    if ((ipLen <= IP_HLEN) || ((SIZEOF_ETH_HDR + ipLen) > rxFrame->totLen))
+    {
+        return;
+    }
+
+    sum = rxFrame->rxAttribute.payloadChecksum;
+    if ((0U == (rxFrame->rxAttribute.ipFlags & ENET_BUFFDESCRIPTOR_RX_FRAGMENT_MASK)) &&
+        ((IPH_PROTO(iphdr) == IP_PROTO_TCP) || (IPH_PROTO(iphdr) == IP_PROTO_UDP)))
+    {
+        /* Remove the pseudo header (addresses, protocol, length) the MAC added: subtract = add the complement. */
+        u32_t src = lwip_ntohl(ip4_addr_get_u32(&iphdr->src));
+        u32_t dst = lwip_ntohl(ip4_addr_get_u32(&iphdr->dest));
+        u32_t pseudoHeader =
+            (src >> 16) + (src & 0xFFFFU) + (dst >> 16) + (dst & 0xFFFFU) + IPH_PROTO(iphdr) + (u32_t)(ipLen - IP_HLEN);
+
+        sum += (u16_t)~ethernetif_fold_sum(pseudoHeader);
+    }
+
+    /* The MAC sums the network order words; lwIP wants the sum in host byte order. */
+    wrapper->chksumSum        = lwip_htons(ethernetif_fold_sum(sum));
+    wrapper->chksumPayload    = frame + SIZEOF_ETH_HDR + IP_HLEN;
+    wrapper->chksumPayloadLen = (u16_t)(ipLen - IP_HLEN);
+    wrapper->chksumValid      = true; /* last: publishes the entry */
+}
+
+u16_t ethernetif_rx_payload_chksum(const void *dataptr, int len)
+{
+    size_t i;
+
+    for (i = 0; i < ARRAY_SIZE(s_rxChksumInstances); i++)
+    {
+        struct ethernetif *ethernetif = s_rxChksumInstances[i];
+        rx_pbuf_wrapper_t *wrapper;
+        uintptr_t offset;
+
+        if (ethernetif == NULL)
+        {
+            continue;
+        }
+
+        /* Find the RX buffer that contains dataptr. Unsigned arithmetic: a lower address wraps and fails the test. */
+        offset = (uintptr_t)dataptr - (uintptr_t)ethernetif->RxDataBuff;
+        if (offset >= (sizeof(rx_buffer_t) * ENET_RXBUFF_NUM))
+        {
+            continue;
+        }
+
+        wrapper = &ethernetif->RxPbufs[offset / sizeof(rx_buffer_t)];
+        if (wrapper->chksumValid && (wrapper->chksumPayload == (const u8_t *)dataptr) &&
+            ((int)wrapper->chksumPayloadLen == len))
+        {
+            /* Used once: the range is not summed a second time by lwIP, and the buffer is reused. */
+            wrapper->chksumValid = false;
+            return wrapper->chksumSum;
+        }
+        break;
+    }
+
+    return lwip_standard_chksum(dataptr, len);
+}
+#endif /* ETH_USE_RX_PAYLOAD_CHECKSUM */
+
 /*! @brief Defines the ENET Rx memory buffer free function pointer. */
 static void *ethernetif_rx_alloc(ENET_Type *base, void *userData, uint8_t ringId)
 {
@@ -391,6 +526,10 @@ static void ethernetif_rx_free(ENET_Type *base, void *buffer, void *userData, ui
     SYS_ARCH_PROTECT(old_level);
 
     LWIP_ASSERT("ethernetif_rx_free: freeing unallocated buffer", ethernetif->RxPbufs[idx].buffer_used);
+#if ETH_USE_RX_PAYLOAD_CHECKSUM
+    /* Before the buffer can be handed out again, so its sum can not be matched with the next frame. */
+    ethernetif->RxPbufs[idx].chksumValid = false;
+#endif
     ethernetif->RxPbufs[idx].buffer_used = false;
 
 #if ETH_DISABLE_RX_INT_WHEN_OUT_OF_BUFFERS
@@ -498,6 +637,10 @@ void ethernetif_plat_init(struct netif *netif,
         ethernetif->RxPbufs[i].buffer_used            = false;
         ethernetif->RxPbufs[i].netif                  = netif;
     }
+
+#if ETH_USE_RX_PAYLOAD_CHECKSUM
+    ethernetif_rx_payload_chksum_add_instance(ethernetif);
+#endif
 
     config.txAccelerConfig = 0;
     config.rxAccelerConfig = kENET_RxAccelMacCheckEnabled;
@@ -691,6 +834,14 @@ static struct pbuf *ethernetif_rx_frame_to_pbufs(struct ethernetif *ethernetif, 
     }
 
     LINK_STATS_INC(link.recv);
+
+#if ETH_USE_RX_PAYLOAD_CHECKSUM
+    /* Only single buffer frames: the descriptor results are those of the last buffer of a frame. */
+    if (p->next == NULL)
+    {
+        ethernetif_rx_payload_chksum_store(wrapper, rxFrame);
+    }
+#endif
 
     return p;
 }

@@ -67,6 +67,13 @@
 #define ETH_DISABLE_RX_INT_WHEN_OUT_OF_BUFFERS (!NO_SYS)
 #endif
 
+/* Let lwIP use the sum of the received IP payload computed by the MAC instead of reading the payload again.
+ * Supported by the ENET port only, needs ENET_ENHANCEDBUFFERDESCRIPTOR_MODE and LWIP_CHKSUM set to
+ * ethernetif_rx_payload_chksum, see README.md. */
+#ifndef ETH_USE_RX_PAYLOAD_CHECKSUM
+#define ETH_USE_RX_PAYLOAD_CHECKSUM 0
+#endif
+
 #define ETHERNETIF_TIMEOUT (0xFFFU)
 
 #ifndef ETH_LINK_POLLING_INTERVAL_MS
@@ -256,6 +263,17 @@ phy_duplex_t ethernetif_get_link_duplex(struct netif *netif_);
  */
 void set_ipv6_valid_state_cb(netif_status_callback_fn callback_fn);
 #endif /* ((LWIP_IPV6 == 1) && (LWIP_NETIF_EXT_STATUS_CALLBACK == 1)) */
+
+#if ETH_USE_RX_PAYLOAD_CHECKSUM
+/**
+ * Checksum of a memory range, to be used as LWIP_CHKSUM. Returns the sum computed by the MAC if the range is
+ * exactly the IP payload of a received frame, otherwise lwip_standard_chksum().
+ */
+u16_t ethernetif_rx_payload_chksum(const void *dataptr, int len);
+
+/* lwIP declares this only when LWIP_CHKSUM is not overridden. */
+u16_t lwip_standard_chksum(const void *dataptr, int len);
+#endif /* ETH_USE_RX_PAYLOAD_CHECKSUM */
 
 #if defined(__cplusplus)
 }

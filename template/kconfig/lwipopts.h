@@ -333,6 +333,20 @@ LWIP_OPT_H_CODE_LINE_100
 #define ETH_DO_RX_IN_SEPARATE_TASK 0
 #endif
 
+#ifndef ETH_USE_RX_PAYLOAD_CHECKSUM
+#define ETH_USE_RX_PAYLOAD_CHECKSUM 0
+#endif
+
+#if ETH_USE_RX_PAYLOAD_CHECKSUM
+/* Sum received payloads with the value computed by the MAC, see port/README.md. The software algorithm is still
+ * needed for every other range: lwIP selects none by itself once LWIP_CHKSUM is overridden. */
+#ifndef LWIP_CHKSUM_ALGORITHM
+#define LWIP_CHKSUM_ALGORITHM 2
+#endif
+unsigned short ethernetif_rx_payload_chksum(const void *dataptr, int len);
+#define LWIP_CHKSUM ethernetif_rx_payload_chksum
+#endif
+
 #ifndef ETH_USE_GPIO_ADAPTER
 #define ETH_USE_GPIO_ADAPTER 0
 #endif

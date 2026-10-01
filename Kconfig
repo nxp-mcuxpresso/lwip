@@ -1009,6 +1009,15 @@ if MCUX_COMPONENT_middleware.lwip
                         No prefix in generated macro
                         Read out received packets in a dedicated task rather than in an interrupt.
 
+                config ETH_USE_RX_PAYLOAD_CHECKSUM
+                    bool "ETH_USE_RX_PAYLOAD_CHECKSUM"
+                    default n
+                    depends on MCUX_COMPONENT_middleware.lwip.kinetis_ethernetif
+                    help
+                        No prefix in generated macro
+                        Let lwIP use the sum of the received IP payload computed by the ENET MAC instead of
+                        reading the payload again. Needs ENET_ENHANCEDBUFFERDESCRIPTOR_MODE.
+
                 config ETH_RX_TASK_STACK_SIZE
                     int "ETH_RX_TASK_STACK_SIZE"
                     default 512
