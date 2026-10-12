@@ -58,7 +58,7 @@
 # ifndef LWIP_CHKSUM_ALGORITHM
 #  define LWIP_CHKSUM_ALGORITHM 2
 # endif
-u16_t lwip_standard_chksum(const void *dataptr, int len);
+u16_t lwip_standard_chksum(const void *dataptr, u16_t len);
 #endif
 /* If none set: */
 #ifndef LWIP_CHKSUM_ALGORITHM

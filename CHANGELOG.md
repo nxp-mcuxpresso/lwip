@@ -11,7 +11,11 @@ To avoid ambiguity, change log below contains SHA-1 hashes of GIT commits used w
 
 KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 
-## 2.2.2_rev2 (newest)
+## 2.2.2_rev3 (newest)
+### Bug fixes:
+- Fixed DHCP UDP packet checksum fail
+
+## 2.2.2_rev2
 ### New features:
 - Added support for LWIP_ENET_QOS_FLEXIBLE_CONFIGURATION in enet_ethernetif_qos to allow changing 'enet_qos_config_t' struct.
 
