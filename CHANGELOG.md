@@ -13,7 +13,14 @@ KSDK refers to Kinetis SDK, the predecessor of MCUXpresso SDK.
 
 ## 2.2.2_rev3 (newest)
 ### Bug fixes:
-- Fixed DHCP UDP packet checksum fail
+- Fixed DHCP UDP packet checksum fail (inet_chksum length parameter changed from int to u16_t).
+- usb_ethernetif (bare metal and FreeRTOS): hardened USB host CDC-ECM/RNDIS handling
+- enet_ethernetif_qos: fixed TX buffer overflow with chained pbufs.
+- enet_ethernetif_qos: renamed the flexible configuration macro and hook to avoid a clash with
+  their ENET counterparts.
+### Other changes:
+- README.md: updated the MCUXpresso SDK documentation links to the new docs.mcuxpresso.nxp.com
+  host and path form.
 
 ## 2.2.2_rev2
 ### New features:
