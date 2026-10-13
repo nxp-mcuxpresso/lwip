@@ -77,7 +77,7 @@ u16_t lwip_standard_chksum(const void *dataptr, u16_t len);
  * @note host endianness is irrelevant (p3 RFC1071)
  */
 u16_t
-lwip_standard_chksum(const void *dataptr, int len)
+lwip_standard_chksum(const void *dataptr, u16_t len)
 {
   u32_t acc;
   u16_t src;
@@ -130,7 +130,7 @@ lwip_standard_chksum(const void *dataptr, int len)
  * @return host order (!) lwip checksum (non-inverted Internet sum)
  */
 u16_t
-lwip_standard_chksum(const void *dataptr, int len)
+lwip_standard_chksum(const void *dataptr, u16_t len)
 {
   const u8_t *pb = (const u8_t *)dataptr;
   const u16_t *ps;
@@ -186,7 +186,7 @@ lwip_standard_chksum(const void *dataptr, int len)
  * by Curt McDowell, Broadcom Corp. December 8th, 2005
  */
 u16_t
-lwip_standard_chksum(const void *dataptr, int len)
+lwip_standard_chksum(const void *dataptr, u16_t len)
 {
   const u8_t *pb = (const u8_t *)dataptr;
   const u16_t *ps;
